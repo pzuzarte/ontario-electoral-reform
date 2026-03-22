@@ -997,18 +997,35 @@ def chart_systems_table_html(stats):
 
 
 def chart_historical_govt(stats):
-    """Stacked bar: seat composition FPTP vs MMP for all elections."""
+    """Stacked bar: seat composition for all 6 electoral systems across all elections."""
     years = [s["year"] for s in stats]
     parties = ["PC", "Liberal", "NDP", "Green", "Others"]
 
+    all_systems = [
+        "FPTP",
+        "List PR d'Hondt",
+        "List PR Sainte-Laguë",
+        "MMP",
+        "AMS",
+        "Regional PR d'Hondt",
+    ]
+    subplot_titles = [
+        "FPTP — Actual Seat Composition",
+        "List PR (D'Hondt) — Simulated",
+        "List PR (Sainte-Laguë) — Simulated",
+        "MMP — Mixed Member Proportional — Simulated",
+        "AMS — Additional Member System — Simulated",
+        "Regional PR (D'Hondt) — Simulated",
+    ]
+
     fig = make_subplots(
-        rows=2, cols=1,
-        subplot_titles=["FPTP — Actual Seat Composition", "MMP — Simulated Seat Composition"],
+        rows=6, cols=1,
+        subplot_titles=subplot_titles,
         shared_xaxes=True,
-        vertical_spacing=0.12,
+        vertical_spacing=0.05,
     )
 
-    for row, sys_name in enumerate(["FPTP", "MMP"], start=1):
+    for row, sys_name in enumerate(all_systems, start=1):
         for party in parties:
             seat_vals = []
             for s in stats:
@@ -1034,9 +1051,9 @@ def chart_historical_govt(stats):
     fig.update_layout(
         paper_bgcolor=BG_CARD, plot_bgcolor=BG,
         font=dict(family="Inter, sans-serif", color=TEXT),
-        height=700,
+        height=2200,
         barmode="stack",
-        title=dict(text="<b>60 Years Reimagined</b> — FPTP vs MMP Seat Composition (1963–2022)",
+        title=dict(text="<b>60 Years Reimagined</b> — Seat Composition Under All Electoral Systems (1963–2022)",
                    font=dict(size=16, color=TEXT)),
         legend=dict(bgcolor="rgba(22,27,34,0.9)", bordercolor=GRID, borderwidth=1,
                     font=dict(color=TEXT)),
