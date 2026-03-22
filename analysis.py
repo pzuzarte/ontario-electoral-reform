@@ -1206,36 +1206,32 @@ def chart_population_disparity(results, populations, geojson):
 
 
 def chart_votes_per_seat(results):
-    """Horizontal bar: votes per seat won per party in 2022."""
-    party_votes  = {}  # total votes in won ridings
-    party_seats  = {}  # seats won
-    party_total_votes = {}  # total votes cast for party across all ridings
+    """Horizontal bar: actual party votes received ÷ seats won per party in 2022.
 
-    for riding, info in results.items():
-        party  = info.get("party", "Others")
-        votes  = info.get("votes", 0)
-        pkey = party if party in PARTY_COLORS else "Others"
+    Uses province-wide vote share from the curated ONTARIO_ELECTIONS data
+    (not total turnout in won ridings, which was the previous incorrect approach).
+    """
+    # Total valid votes cast across all 124 ridings (from riding-level data)
+    total_votes = sum(info.get("votes", 0) for info in results.values())
 
-        party_seats[pkey]       = party_seats.get(pkey, 0) + 1
-        party_votes[pkey]       = party_votes.get(pkey, 0) + votes
-        party_total_votes[pkey] = party_total_votes.get(pkey, 0) + votes
+    # Province-wide vote share + seats from curated 2022 data
+    election_2022 = next(e for e in ONTARIO_ELECTIONS if e["year"] == 2022)
 
-    # Compute votes per seat
-    total_all_votes = sum(party_total_votes.values())
     rows = []
-    for p, seats in party_seats.items():
+    for party, (vote_pct, seats) in election_2022["results"].items():
         if seats == 0:
             continue
-        vps = party_votes[p] / seats
-        vote_pct = 100.0 * party_total_votes[p] / total_all_votes if total_all_votes else 0
-        rows.append((p, vps, seats, vote_pct))
+        party_votes_received = (vote_pct / 100) * total_votes
+        vps = party_votes_received / seats
+        rows.append((party, vps, seats, vote_pct))
 
-    rows.sort(key=lambda r: r[1])  # sort ascending by vps
+    # Sort descending — most inefficient (highest cost per seat) at top
+    rows.sort(key=lambda r: r[1], reverse=True)
 
     parties_sorted  = [r[0] for r in rows]
     vps_sorted      = [r[1] for r in rows]
     colors_sorted   = [pcolor(p) for p in parties_sorted]
-    annotations_txt = [f"{r[3]:.1f}% of vote, {r[2]} seats" for r in rows]
+    annotations_txt = [f"{r[3]:.1f}% of votes → {r[2]} seat{'s' if r[2]!=1 else ''}" for r in rows]
 
     fig = go.Figure()
     fig.add_trace(go.Bar(
@@ -1246,15 +1242,27 @@ def chart_votes_per_seat(results):
         text=annotations_txt,
         textposition="outside",
         textfont=dict(color=TEXT, size=11),
-        hovertemplate="<b>%{y}</b><br>Votes per seat: %{x:,.0f}<extra></extra>",
+        hovertemplate="<b>%{y}</b><br>Votes received per seat won: %{x:,.0f}<extra></extra>",
         name="Votes per seat",
     ))
 
+    # Reference line at the "perfectly proportional" cost
+    # (total votes / total seats = what each seat costs if equal)
+    fair_cost = total_votes / election_2022["seats"]
+    fig.add_vline(
+        x=fair_cost,
+        line_dash="dot", line_color="rgba(255,255,255,0.35)",
+        annotation_text=f"Proportional ideal: {fair_cost:,.0f}",
+        annotation_position="top",
+        annotation_font=dict(color=MUTED, size=11),
+    )
+
     fig.update_layout(**lay(
-        title="<b>Cost of a Seat — How Many Votes Did It Take? (2022)</b><br>"
-              "<sup>Total valid votes in won ridings ÷ seats won. Lower = more efficient under FPTP.</sup>",
+        title="<b>Cost of a Seat — Votes Received per Seat Won (2022)</b><br>"
+              "<sup>Party's province-wide votes ÷ seats won. "
+              "The dashed line shows the cost under perfect proportionality.</sup>",
         height=H,
-        xaxis=dict(title="Votes per Seat Won", tickformat=","),
+        xaxis=dict(title="Votes Received per Seat Won", tickformat=","),
         yaxis=dict(title=""),
         showlegend=False,
     ))
