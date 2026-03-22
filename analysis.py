@@ -337,7 +337,7 @@ def simulate_all_systems(election):
 # ════════════════════════════════════════════════════════════════════════════
 
 def gallagher_index(votes_dict, seats_dict, total_seats):
-    """Gallagher index: sqrt(0.5 * sum((v_i - s_i)^2)), v/s as percentages."""
+    """Gallagher Least Squares Index: sqrt(0.5 * sum((v_i - s_i)^2)), v/s as percentages."""
     all_parties = set(votes_dict) | set(seats_dict)
     total_votes = sum(votes_dict.values())
     sq_sum = 0.0
@@ -346,6 +346,26 @@ def gallagher_index(votes_dict, seats_dict, total_seats):
         s_pct = 100.0 * seats_dict.get(p, 0) / total_seats if total_seats else 0
         sq_sum += (v_pct - s_pct) ** 2
     return math.sqrt(0.5 * sq_sum)
+
+
+def sl_index(votes_dict, seats_dict, total_seats):
+    """Sainte-Laguë Disproportionality Index: sum((v_i - s_i)^2 / v_i).
+
+    Uses vote and seat shares as proportions (0–1). Only parties with v_i > 0
+    are included. Higher values indicate greater disproportionality.
+    Unlike the Gallagher index the SL index is unbounded above and penalises
+    disproportionality relative to a party's actual vote share — a 5-point gap
+    matters more for a small party than a large one.
+    """
+    all_parties = set(votes_dict) | set(seats_dict)
+    total_votes = sum(votes_dict.values())
+    total = 0.0
+    for p in all_parties:
+        v = votes_dict.get(p, 0) / total_votes if total_votes else 0
+        s = seats_dict.get(p, 0) / total_seats if total_seats else 0
+        if v > 0:
+            total += (v - s) ** 2 / v
+    return total
 
 
 def wasted_votes_pct(election):
@@ -368,13 +388,24 @@ def is_false_majority(election):
 
 
 def compute_all_gallagher(election):
-    """Gallagher index for all 6 systems for one election."""
+    """Gallagher index for all systems for one election."""
     total = election["seats"]
     votes_dict = {p: v for p, (v, s) in election["results"].items()}
     systems = simulate_all_systems(election)
     out = {}
     for sys_name, seats_dict in systems.items():
         out[sys_name] = gallagher_index(votes_dict, seats_dict, total)
+    return out
+
+
+def compute_all_sl(election):
+    """Sainte-Laguë disproportionality index for all systems for one election."""
+    total = election["seats"]
+    votes_dict = {p: v for p, (v, s) in election["results"].items()}
+    systems = simulate_all_systems(election)
+    out = {}
+    for sys_name, seats_dict in systems.items():
+        out[sys_name] = sl_index(votes_dict, seats_dict, total)
     return out
 
 
@@ -478,7 +509,8 @@ def build_election_stats():
         votes_dict = {p: v for p, (v, s) in e["results"].items()}
         fptp_dict  = {p: s for p, (v, s) in e["results"].items()}
         winner = max(fptp_dict, key=fptp_dict.get)
-        g_systems = compute_all_gallagher(e)
+        g_systems  = compute_all_gallagher(e)
+        sl_systems = compute_all_sl(e)
         stats.append({
             "year": e["year"],
             "seats": e["seats"],
@@ -486,6 +518,7 @@ def build_election_stats():
             "winner_votes": votes_dict[winner],
             "winner_seats": fptp_dict[winner],
             "gallagher": g_systems,
+            "sli": sl_systems,
             "wasted": wasted_votes_pct(e),
             "false_majority": is_false_majority(e),
             "votes": votes_dict,
@@ -619,6 +652,57 @@ def chart_gallagher_history(stats):
     return to_html(fig)
 
 
+def chart_sl_history(stats):
+    """Bar chart: Sainte-Laguë disproportionality index per election (FPTP only)."""
+    years  = [s["year"]  for s in stats]
+    sli    = [s["sli"]["FPTP"] for s in stats]
+    colors = [pcolor(s["winner"]) for s in stats]
+
+    fig = go.Figure()
+    fig.add_trace(go.Bar(
+        x=years, y=sli,
+        marker_color=colors,
+        text=[f"{v:.3f}" for v in sli],
+        textposition="outside",
+        textfont=dict(color=TEXT, size=11),
+        hovertemplate="<b>%{x}</b><br>Sainte-Laguë Index: %{y:.4f}<extra></extra>",
+        name="SL Index",
+    ))
+
+    # Reference thresholds (roughly calibrated to Gallagher equivalents)
+    for threshold, label, color in [
+        (0.02, "Low (0.02)",      "rgba(61,155,53,0.6)"),
+        (0.06, "Moderate (0.06)", "rgba(244,131,31,0.6)"),
+        (0.12, "High (0.12)",     "rgba(208,0,0,0.6)"),
+    ]:
+        fig.add_hline(y=threshold, line_dash="dash", line_color=color,
+                      line_width=1.5,
+                      annotation_text=label,
+                      annotation_position="right",
+                      annotation_font=dict(color=MUTED, size=11))
+
+    # Annotate 2022
+    idx_2022 = years.index(2022)
+    fig.add_annotation(
+        x=2022, y=sli[idx_2022] + 0.005,
+        text=f"<b>2022: {sli[idx_2022]:.3f}</b>",
+        showarrow=True, arrowhead=2, arrowcolor=MUTED,
+        font=dict(color=TEXT, size=12), bgcolor=BG_CARD2, bordercolor=BORDER,
+    )
+
+    fig.update_layout(**lay(
+        title="<b>Sainte-Laguë Disproportionality Index</b> — Ontario Elections 1963–2022<br>"
+              "<sup>Σ (v<sub>i</sub> − s<sub>i</sub>)² / v<sub>i</sub> "
+              "— penalises gaps relative to a party's vote share; "
+              "bar colour = winning party</sup>",
+        height=H,
+        xaxis=dict(title="Election Year", tickmode="array", tickvals=years, tickangle=-45),
+        yaxis=dict(title="Sainte-Laguë Index (higher = more disproportional)"),
+        showlegend=False,
+    ))
+    return to_html(fig)
+
+
 def chart_wasted_votes(stats):
     """Area/bar chart of wasted votes per election."""
     years = [s["year"] for s in stats]
@@ -734,28 +818,62 @@ def chart_seat_comparison_2022(stats):
 
 
 def chart_gallagher_by_system(stats):
-    """Grouped bar chart: Gallagher index by system for each election year."""
+    """2-row subplot: Gallagher index (top) and Sainte-Laguë index (bottom)
+    for every electoral system across all Ontario elections 1963–2022."""
     years = [s["year"] for s in stats]
-    sys_order = ["FPTP", "List PR d'Hondt", "List PR Sainte-Laguë",
-                 "MMP", "AMS", "Regional PR d'Hondt"]
+    sys_order  = ["FPTP", "List PR d'Hondt", "List PR Sainte-Laguë",
+                  "MMP", "AMS", "Regional PR d'Hondt"]
     sys_colors = ["#6B7280", "#003F7F", "#4CC9F0", "#F4831F", "#D00000", "#3D9B35"]
 
-    fig = go.Figure()
+    fig = make_subplots(
+        rows=2, cols=1,
+        shared_xaxes=True,
+        vertical_spacing=0.12,
+        subplot_titles=[
+            "Gallagher Disproportionality Index",
+            "Sainte-Laguë Disproportionality Index",
+        ],
+    )
+
     for sys_name, color in zip(sys_order, sys_colors):
-        gi_vals = [s["gallagher"].get(sys_name, 0) for s in stats]
+        gi_vals  = [s["gallagher"].get(sys_name, 0) for s in stats]
+        sli_vals = [s["sli"].get(sys_name, 0)       for s in stats]
+
         fig.add_trace(go.Bar(
             x=years, y=gi_vals, name=sys_name, marker_color=color,
-            hovertemplate=f"<b>{sys_name}</b><br>%{{x}}: %{{y:.2f}}<extra></extra>",
-        ))
+            hovertemplate=f"<b>{sys_name}</b><br>%{{x}} Gallagher: %{{y:.2f}}<extra></extra>",
+            legendgroup=sys_name,
+        ), row=1, col=1)
 
-    fig.update_layout(**lay(
-        title="<b>Gallagher Index by Electoral System</b> — All Ontario Elections 1963–2022",
-        height=H,
-        barmode="group",
-        xaxis=dict(title="Election Year", tickmode="array", tickvals=years, tickangle=-45),
-        yaxis=dict(title="Gallagher Index"),
-        legend=dict(**BASE_LAYOUT["legend"]),
-    ))
+        fig.add_trace(go.Bar(
+            x=years, y=sli_vals, name=sys_name, marker_color=color,
+            hovertemplate=f"<b>{sys_name}</b><br>%{{x}} SL Index: %{{y:.4f}}<extra></extra>",
+            legendgroup=sys_name, showlegend=False,
+        ), row=2, col=1)
+
+    # Style subplot titles
+    for ann in fig.layout.annotations:
+        ann.font.update(color=MUTED, size=13)
+
+    fig.update_layout(
+        **{k: v for k, v in lay(
+            title="<b>Disproportionality by Electoral System</b> — All Ontario Elections 1963–2022",
+            height=780,
+            barmode="group",
+            legend=dict(**BASE_LAYOUT["legend"]),
+        ).items() if k not in ("xaxis", "yaxis")},
+    )
+    for row in (1, 2):
+        fig.update_xaxes(
+            tickmode="array", tickvals=years, tickangle=-45,
+            gridcolor=GRID, linecolor=GRID, tickfont=dict(color="#CDD9E5"),
+            row=row, col=1,
+        )
+    fig.update_yaxes(title_text="Gallagher Index",       gridcolor=GRID, linecolor=GRID,
+                     tickfont=dict(color="#CDD9E5"), row=1, col=1)
+    fig.update_yaxes(title_text="Sainte-Laguë Index",    gridcolor=GRID, linecolor=GRID,
+                     tickfont=dict(color="#CDD9E5"), row=2, col=1)
+    fig.update_layout(paper_bgcolor=BG_CARD, plot_bgcolor=BG)
     return to_html(fig)
 
 
@@ -1647,6 +1765,7 @@ def build_html(charts, stats, false_count, systems_table_html, riding_charts=Non
         ("the-problem",       "Ch.1 · The Problem"),
         ("vote-seat-gap",     "Vote vs Seat Gap"),
         ("gallagher-history", "Gallagher History"),
+        ("sl-history",        "Sainte-Laguë History"),
         ("wasted-votes",      "Wasted Votes"),
         ("false-majorities",  "False Majorities"),
         ("election-2022",     "Ch.2 · 2022 Election"),
@@ -1932,6 +2051,19 @@ body{{background:var(--bg);color:var(--text);font-family:var(--font);
       f"Ontario's 2022 score of {gi_2022:.1f} is among the highest in its history. Bars are "
       f"colored by the winning party.",
       charts["gallagher_history"],
+      "Computed from Elections Ontario data")}
+    <div class="divider"></div>
+
+    {make_section("sl-history","Chapter 1 · The Problem",
+      "Sainte-Laguë Disproportionality Index",
+      "The Sainte-Laguë Index (SLI) is an alternative measure of electoral disproportionality: "
+      "Σ (v<sub>i</sub> − s<sub>i</sub>)² / v<sub>i</sub>. "
+      "Unlike the Gallagher Index, it weights the vote–seat gap relative to each party's actual "
+      "vote share — so a 5-point gap hurts a small party more than a large one. "
+      "The two indices are complementary: Gallagher is sensitive to large absolute gaps, "
+      "while SLI is sensitive to proportional disadvantage suffered by smaller parties. "
+      "Bar colour indicates the winning party.",
+      charts["sl_history"],
       "Computed from Elections Ontario data")}
     <div class="divider"></div>
 
@@ -2311,6 +2443,7 @@ def main():
 
     build("vote_seat_gap",  "Vote vs Seat Gap",         chart_vote_seat_gap,  stats)
     build("gallagher_history", "Gallagher History",     chart_gallagher_history, stats)
+    build("sl_history",        "Sainte-Laguë History",  chart_sl_history,         stats)
     build("wasted_votes",   "Wasted Votes",             chart_wasted_votes,   stats)
 
     fm_html, fc = chart_false_majorities(stats)
