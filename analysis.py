@@ -934,6 +934,19 @@ def chart_regional_pr_bar(stats):
     return to_html(fig)
 
 
+def _seat_delta(seats, vote_pct, total, party):
+    """Return formatted seat count with seat%-minus-vote% delta in parentheses."""
+    s = seats.get(party, 0)
+    v = vote_pct.get(party, 0)
+    seat_pct = 100.0 * s / total if total else 0
+    delta = seat_pct - v
+    sign = "+" if delta >= 0 else ""
+    delta_color = "#D00000" if delta > 3 else ("#3D9B35" if delta < -3 else "#8B949E")
+    return (s,
+            f'<span style="font-size:11px;color:{delta_color}">'
+            f'({sign}{delta:.1f}pp)</span>')
+
+
 def chart_systems_table_html(stats):
     """Build a styled HTML table for 2022 systems comparison."""
     s2022 = next(s for s in stats if s["year"] == 2022)
@@ -943,36 +956,46 @@ def chart_systems_table_html(stats):
 
     sys_order = ["FPTP", "List PR d'Hondt", "List PR Sainte-Laguë",
                  "Regional PR d'Hondt", "MMP", "AMS"]
+    parties_order = ["PC", "Liberal", "NDP", "Green"]
 
     rows_html = ""
     for sys_name in sys_order:
         seats = systems_data.get(sys_name, {})
         gi = gallagher_index(votes_2022, seats, total)
-        pc_s  = seats.get("PC", 0)
-        lib_s = seats.get("Liberal", 0)
-        ndp_s = seats.get("NDP", 0)
-        grn_s = seats.get("Green", 0)
-        pc_maj = "Yes" if pc_s > total / 2 else "No"
-        maj_cls = "style='color:#D00000'" if pc_maj == "Yes" else "style='color:#3D9B35'"
+        pc_s,  pc_d  = _seat_delta(seats, votes_2022, total, "PC")
+        lib_s, lib_d = _seat_delta(seats, votes_2022, total, "Liberal")
+        ndp_s, ndp_d = _seat_delta(seats, votes_2022, total, "NDP")
+        grn_s, grn_d = _seat_delta(seats, votes_2022, total, "Green")
+        winner = max(seats, key=seats.get) if seats else "—"
+        w_seats = seats.get(winner, 0)
+        w_votes = votes_2022.get(winner, 0)
+        is_false_maj = w_votes < 50.0 and w_seats > total / 2
+        gov_label = f"{winner} Majority" if w_seats > total / 2 else f"{winner} Minority"
+        gov_color = "#D00000" if is_false_maj else ("#F4831F" if w_seats > total / 2 else "#3D9B35")
         rows_html += f"""
         <tr>
           <td><strong>{sys_name}</strong></td>
-          <td style="color:{pcolor('PC')}">{pc_s}</td>
-          <td style="color:{pcolor('Liberal')}">{lib_s}</td>
-          <td style="color:{pcolor('NDP')}">{ndp_s}</td>
-          <td style="color:{pcolor('Green')}">{grn_s}</td>
+          <td style="color:{pcolor('PC')}">{pc_s} {pc_d}</td>
+          <td style="color:{pcolor('Liberal')}">{lib_s} {lib_d}</td>
+          <td style="color:{pcolor('NDP')}">{ndp_s} {ndp_d}</td>
+          <td style="color:{pcolor('Green')}">{grn_s} {grn_d}</td>
           <td>{gi:.2f}</td>
-          <td {maj_cls}>{pc_maj}</td>
+          <td style="color:{gov_color}">{gov_label}{'&nbsp;⚠' if is_false_maj else ''}</td>
         </tr>"""
 
     # Reference row: vote %
+    prop_row_parts = []
+    for p in parties_order:
+        v = votes_2022.get(p, 0)
+        prop_seats = total * v / 100
+        prop_row_parts.append(
+            f'<td style="color:{pcolor(p)}">{v:.1f}% '
+            f'<span style="font-size:11px;color:#8B949E">({prop_seats:.0f} prop. seats)</span></td>'
+        )
     rows_html = f"""
         <tr style="border-bottom:2px solid #30363D;color:#8B949E;">
-          <td><em>Vote % (reference)</em></td>
-          <td style="color:{pcolor('PC')}">{votes_2022.get('PC',0):.1f}%</td>
-          <td style="color:{pcolor('Liberal')}">{votes_2022.get('Liberal',0):.1f}%</td>
-          <td style="color:{pcolor('NDP')}">{votes_2022.get('NDP',0):.1f}%</td>
-          <td style="color:{pcolor('Green')}">{votes_2022.get('Green',0):.1f}%</td>
+          <td><em>Vote % (proportional entitlement)</em></td>
+          {"".join(prop_row_parts)}
           <td>—</td>
           <td>—</td>
         </tr>""" + rows_html
@@ -983,54 +1006,92 @@ def chart_systems_table_html(stats):
         <thead>
           <tr>
             <th>System</th>
-            <th style="color:{pcolor('PC')}">PC Seats</th>
-            <th style="color:{pcolor('Liberal')}">Liberal Seats</th>
-            <th style="color:{pcolor('NDP')}">NDP Seats</th>
-            <th style="color:{pcolor('Green')}">Green Seats</th>
+            <th style="color:{pcolor('PC')}">PC Seats <span style="font-weight:400;font-size:10px">(Δ from proportional)</span></th>
+            <th style="color:{pcolor('Liberal')}">Liberal Seats <span style="font-weight:400;font-size:10px">(Δ)</span></th>
+            <th style="color:{pcolor('NDP')}">NDP Seats <span style="font-weight:400;font-size:10px">(Δ)</span></th>
+            <th style="color:{pcolor('Green')}">Green Seats <span style="font-weight:400;font-size:10px">(Δ)</span></th>
             <th>Gallagher Index</th>
-            <th>PC Majority?</th>
+            <th>Government</th>
           </tr>
         </thead>
         <tbody>{rows_html}</tbody>
       </table>
+      <p style="font-size:11px;color:#8B949E;padding:10px 16px;margin:0">
+        Δpp = seat percentage point advantage/disadvantage vs proportional vote share.
+        Red Δ = over-represented; Green Δ = under-represented. ⚠ = false majority (won majority seats with minority of votes).
+      </p>
     </div>"""
 
 
+_NOTABLE_ELECTIONS = {
+    1987: "Liberal sweep",
+    1990: "NDP majority",
+    1995: "Harris revolution",
+    2018: "Ford landslide",
+}
+
+_ALL_SYSTEMS_ORDER = [
+    "FPTP",
+    "List PR d'Hondt",
+    "List PR Sainte-Laguë",
+    "MMP",
+    "AMS",
+    "Regional PR d'Hondt",
+]
+_ALL_SYSTEMS_TITLES = [
+    "FPTP — Actual Seat Composition",
+    "List PR (D'Hondt) — Simulated",
+    "List PR (Sainte-Laguë) — Simulated",
+    "MMP — Mixed Member Proportional — Simulated",
+    "AMS — Additional Member System — Simulated",
+    "Regional PR (D'Hondt) — Simulated",
+]
+
+
+def _add_govt_annotations(fig, stats, sys_name, row):
+    """Add Maj/Min winner labels above each bar stack for one system panel."""
+    yref = "y" if row == 1 else f"y{row}"
+    for s in stats:
+        year = s["year"]
+        seat_dict = s["systems"].get(sys_name, {})
+        total = s["seats"]
+        if not seat_dict:
+            continue
+        winner = max(seat_dict, key=seat_dict.get)
+        w_seats = seat_dict.get(winner, 0)
+        w_votes = s["votes"].get(winner, 0)
+        is_maj = w_seats > total / 2
+        is_false = w_votes < 50.0 and is_maj
+        label = ("★ Maj" if is_maj else "○ Min")
+        label_color = pcolor(winner)
+        stack_top = sum(seat_dict.values())
+        fig.add_annotation(
+            x=year,
+            y=stack_top + max(total * 0.025, 2),
+            text=label,
+            font=dict(size=8, color=label_color),
+            showarrow=False,
+            xref="x",
+            yref=yref,
+        )
+
+
 def chart_historical_govt(stats):
-    """Stacked bar: seat composition for all 6 electoral systems across all elections."""
+    """Stacked bar: seat composition for all 6 electoral systems across all elections,
+    with Maj/Min annotations, winner shading, and notable election markers."""
     years = [s["year"] for s in stats]
     parties = ["PC", "Liberal", "NDP", "Green", "Others"]
 
-    all_systems = [
-        "FPTP",
-        "List PR d'Hondt",
-        "List PR Sainte-Laguë",
-        "MMP",
-        "AMS",
-        "Regional PR d'Hondt",
-    ]
-    subplot_titles = [
-        "FPTP — Actual Seat Composition",
-        "List PR (D'Hondt) — Simulated",
-        "List PR (Sainte-Laguë) — Simulated",
-        "MMP — Mixed Member Proportional — Simulated",
-        "AMS — Additional Member System — Simulated",
-        "Regional PR (D'Hondt) — Simulated",
-    ]
-
     fig = make_subplots(
         rows=6, cols=1,
-        subplot_titles=subplot_titles,
+        subplot_titles=_ALL_SYSTEMS_TITLES,
         shared_xaxes=True,
         vertical_spacing=0.05,
     )
 
-    for row, sys_name in enumerate(all_systems, start=1):
+    for row, sys_name in enumerate(_ALL_SYSTEMS_ORDER, start=1):
         for party in parties:
-            seat_vals = []
-            for s in stats:
-                seat_dict = s["systems"].get(sys_name, {})
-                seat_vals.append(seat_dict.get(party, 0))
+            seat_vals = [s["systems"].get(sys_name, {}).get(party, 0) for s in stats]
             fig.add_trace(go.Bar(
                 x=years, y=seat_vals, name=party,
                 marker_color=pcolor(party),
@@ -1039,25 +1100,59 @@ def chart_historical_govt(stats):
                 showlegend=(row == 1),
             ), row=row, col=1)
 
-        # 50% majority line
+        # 50% majority threshold line
         majority_lines = [s["seats"] / 2 for s in stats]
         fig.add_trace(go.Scatter(
             x=years, y=majority_lines, mode="lines",
-            line=dict(color="rgba(255,255,255,0.3)", width=1.5, dash="dot"),
+            line=dict(color="rgba(255,255,255,0.28)", width=1.5, dash="dot"),
             name="Majority threshold", showlegend=(row == 1),
             hoverinfo="skip",
         ), row=row, col=1)
 
+        # Maj/Min + winner annotations per election
+        _add_govt_annotations(fig, stats, sys_name, row)
+
+    # Notable election vertical reference lines (shared x, shows across all panels)
+    for ny in _NOTABLE_ELECTIONS:
+        if ny in years:
+            fig.add_vline(
+                x=ny,
+                line_dash="dot",
+                line_color="rgba(255,255,255,0.13)",
+                line_width=1.5,
+            )
+
+    # Notable election labels — pinned to top of figure in paper coords
+    for ny, nlabel in _NOTABLE_ELECTIONS.items():
+        if ny in years:
+            fig.add_annotation(
+                x=ny,
+                y=1.0,
+                xref="x",
+                yref="paper",
+                text=nlabel,
+                font=dict(size=8, color=MUTED),
+                showarrow=False,
+                textangle=-70,
+                yanchor="top",
+                xanchor="center",
+            )
+
+    # Style subplot titles
+    for ann in fig.layout.annotations:
+        if ann.text and ann.text not in _NOTABLE_ELECTIONS.values():
+            ann.font.update(color=MUTED, size=12)
+
     fig.update_layout(
         paper_bgcolor=BG_CARD, plot_bgcolor=BG,
         font=dict(family="Inter, sans-serif", color=TEXT),
-        height=2200,
+        height=2300,
         barmode="stack",
         title=dict(text="<b>60 Years Reimagined</b> — Seat Composition Under All Electoral Systems (1963–2022)",
                    font=dict(size=16, color=TEXT)),
         legend=dict(bgcolor="rgba(22,27,34,0.9)", bordercolor=GRID, borderwidth=1,
                     font=dict(color=TEXT)),
-        margin=dict(t=80, b=55, l=65, r=30),
+        margin=dict(t=100, b=55, l=65, r=30),
         hoverlabel=dict(bgcolor="#2D333B", bordercolor=GRID, font=dict(color=TEXT)),
     )
     fig.update_xaxes(gridcolor=GRID, tickfont=dict(color="#CDD9E5"),
@@ -1065,6 +1160,166 @@ def chart_historical_govt(stats):
     fig.update_yaxes(gridcolor=GRID, zerolinecolor=GRID, tickfont=dict(color="#CDD9E5"),
                      title_text="Seats")
     return to_html(fig)
+
+
+def chart_single_system(stats, sys_name, sys_title):
+    """Single-system stacked bar chart — used for the mobile tab view."""
+    years = [s["year"] for s in stats]
+    parties = ["PC", "Liberal", "NDP", "Green", "Others"]
+
+    fig = go.Figure()
+    for party in parties:
+        seat_vals = [s["systems"].get(sys_name, {}).get(party, 0) for s in stats]
+        fig.add_trace(go.Bar(
+            x=years, y=seat_vals, name=party,
+            marker_color=pcolor(party),
+            hovertemplate=f"<b>{party}</b>: %{{y}} seats<extra></extra>",
+            legendgroup=party,
+        ))
+
+    majority_lines = [s["seats"] / 2 for s in stats]
+    fig.add_trace(go.Scatter(
+        x=years, y=majority_lines, mode="lines",
+        line=dict(color="rgba(255,255,255,0.28)", width=1.5, dash="dot"),
+        name="Majority threshold",
+        hoverinfo="skip",
+    ))
+
+    # Maj/Min annotations
+    for s in stats:
+        year = s["year"]
+        seat_dict = s["systems"].get(sys_name, {})
+        total = s["seats"]
+        if seat_dict:
+            winner = max(seat_dict, key=seat_dict.get)
+            w_seats = seat_dict.get(winner, 0)
+            is_maj = w_seats > total / 2
+            label = "★ Maj" if is_maj else "○ Min"
+            stack_top = sum(seat_dict.values())
+            fig.add_annotation(
+                x=year, y=stack_top + max(total * 0.03, 2),
+                text=label,
+                font=dict(size=9, color=pcolor(winner)),
+                showarrow=False,
+            )
+
+    # Notable election vertical lines
+    for ny, nlabel in _NOTABLE_ELECTIONS.items():
+        if ny in years:
+            fig.add_vline(x=ny, line_dash="dot",
+                          line_color="rgba(255,255,255,0.13)", line_width=1.5)
+            fig.add_annotation(x=ny, y=1.05, yref="paper",
+                               text=nlabel, font=dict(size=8, color=MUTED),
+                               showarrow=False, textangle=-70,
+                               yanchor="bottom", xanchor="center", xref="x")
+
+    fig.update_layout(
+        paper_bgcolor=BG_CARD, plot_bgcolor=BG,
+        font=dict(family="Inter, sans-serif", color=TEXT),
+        height=420,
+        barmode="stack",
+        title=dict(text=f"<b>{sys_title}</b>", font=dict(size=14, color=TEXT)),
+        legend=dict(bgcolor="rgba(22,27,34,0.9)", bordercolor=GRID, borderwidth=1,
+                    font=dict(color=TEXT), orientation="h", yanchor="bottom",
+                    y=-0.22, xanchor="center", x=0.5),
+        margin=dict(t=60, b=80, l=50, r=20),
+        hoverlabel=dict(bgcolor="#2D333B", bordercolor=GRID, font=dict(color=TEXT)),
+        xaxis=dict(gridcolor=GRID, tickfont=dict(color="#CDD9E5"),
+                   tickmode="array", tickvals=years, tickangle=-45),
+        yaxis=dict(gridcolor=GRID, zerolinecolor=GRID, tickfont=dict(color="#CDD9E5"),
+                   title_text="Seats"),
+    )
+    return to_html(fig)
+
+
+def chart_cross_system_scorecard_table(stats):
+    """Build a styled HTML comparison table summarising all systems across all 17 elections."""
+    n = len(stats)
+
+    def false_maj_count(sys_name):
+        count = 0
+        for s in stats:
+            seat_dict = s["systems"].get(sys_name, {})
+            total = s["seats"]
+            if not seat_dict:
+                continue
+            winner = max(seat_dict, key=seat_dict.get)
+            w_seats = seat_dict.get(winner, 0)
+            w_votes = s["votes"].get(winner, 0)
+            if w_votes < 50.0 and w_seats > total / 2:
+                count += 1
+        return count
+
+    def avg_gallagher(sys_name):
+        return sum(s["gallagher"].get(sys_name, 0) for s in stats) / n
+
+    def avg_seat_bonus(sys_name):
+        """Average pp by which the winning party's seat% exceeds its vote%."""
+        bonuses = []
+        for s in stats:
+            seat_dict = s["systems"].get(sys_name, {})
+            total = s["seats"]
+            if not seat_dict:
+                continue
+            winner = max(seat_dict, key=seat_dict.get)
+            w_seats = seat_dict.get(winner, 0)
+            w_votes = s["votes"].get(winner, 0)
+            seat_pct = 100.0 * w_seats / total if total else 0
+            bonuses.append(seat_pct - w_votes)
+        return sum(bonuses) / len(bonuses) if bonuses else 0
+
+    def verdict(gi, fm, bonus):
+        if gi < 4 and fm == 0:
+            return ("Very Proportional", "#3D9B35")
+        elif gi < 7 and fm <= 2:
+            return ("Fairly Proportional", "#7BC67E")
+        elif gi < 12 and fm <= 7:
+            return ("Moderate Distortion", "#F4831F")
+        else:
+            return ("High Distortion", "#D00000")
+
+    sys_display = {
+        "FPTP": "FPTP (actual)",
+        "List PR d'Hondt": "List PR — D'Hondt",
+        "List PR Sainte-Laguë": "List PR — Sainte-Laguë",
+        "MMP": "MMP",
+        "AMS": "AMS",
+        "Regional PR d'Hondt": "Regional PR — D'Hondt",
+    }
+
+    rows_html = ""
+    for sys_name in _ALL_SYSTEMS_ORDER:
+        gi  = avg_gallagher(sys_name)
+        fm  = false_maj_count(sys_name)
+        bon = avg_seat_bonus(sys_name)
+        lab, col = verdict(gi, fm, bon)
+        rows_html += f"""
+        <tr>
+          <td><strong>{sys_display.get(sys_name, sys_name)}</strong></td>
+          <td>{gi:.1f}</td>
+          <td>{fm} / {n}</td>
+          <td>{bon:+.1f} pp</td>
+          <td><span style="color:{col};font-weight:600">{lab}</span></td>
+        </tr>"""
+
+    return f"""
+    <div class="table-responsive">
+      <table class="summary-table">
+        <thead>
+          <tr>
+            <th>Electoral System</th>
+            <th>Avg. Gallagher Index<br><span style="font-weight:400;font-size:10px">(lower = more proportional)</span></th>
+            <th>False Majorities<br><span style="font-weight:400;font-size:10px">(out of {n} elections)</span></th>
+            <th>Avg. Winner Seat Bonus<br><span style="font-weight:400;font-size:10px">(seat% minus vote%)</span></th>
+            <th>Overall Verdict</th>
+          </tr>
+        </thead>
+        <tbody>{rows_html}</tbody>
+      </table>
+      <p style="font-size:11px;color:#8B949E;padding:10px 16px;margin:0">
+        Averages computed across all {n} Ontario provincial elections (1963–2022). False majority = won ≥50% of seats with &lt;50% of votes.
+      </p>
+    </div>"""
 
 
 def chart_federal_ontario_gallagher():
@@ -1767,14 +2022,36 @@ def make_section(sid, chapter, title, desc, chart_html, source=""):
 </section>"""
 
 
-def build_html(charts, stats, false_count, systems_table_html, riding_charts=None):
+def build_html(charts, stats, false_count, systems_table_html,
+               riding_charts=None, mobile_sys_charts=None, cross_sys_table_html=""):
     today = datetime.now().strftime("%B %d, %Y")
     gen_year = datetime.now().year
+    mobile_sys_charts = mobile_sys_charts or {}
 
     # Gallagher 2022 FPTP
     s2022 = next(s for s in stats if s["year"] == 2022)
     gi_2022 = s2022["gallagher"]["FPTP"]
     wasted_2022 = s2022["wasted"]
+
+    # ── Key Findings (computed dynamically) ──────────────────
+    pc_vote_pct = s2022["votes"].get("PC", 0)
+    pc_seats    = s2022["systems"]["FPTP"].get("PC", 0)
+    pc_seat_pct = 100.0 * pc_seats / s2022["seats"]
+    pc_bonus    = pc_seat_pct - pc_vote_pct
+
+    pr_false = 0
+    for s in stats:
+        sd = s["systems"].get("List PR d'Hondt", {})
+        total = s["seats"]
+        if sd:
+            w = max(sd, key=sd.get)
+            if s["votes"].get(w, 0) < 50.0 and sd[w] > total / 2:
+                pr_false += 1
+
+    mmp_2022 = s2022["systems"].get("MMP", {})
+    mmp_pc   = mmp_2022.get("PC", 0)
+    mmp_outcome = "Majority" if mmp_pc > s2022["seats"] / 2 else "Minority"
+    mmp_color   = "#D00000" if mmp_outcome == "Majority" else "#3D9B35"
 
     nav_items = [
         ("hero",              "Overview"),
@@ -1795,6 +2072,7 @@ def build_html(charts, stats, false_count, systems_table_html, riding_charts=Non
         ("gallagher-by-sys",  "Gallagher by System"),
         ("reimagined",        "Ch.4 · 60 Years"),
         ("historical-govt",   "Historical Govts"),
+        ("cross-sys-scorecard","System Scorecard"),
         ("federal",           "Ch.5 · Federal"),
         ("federal-vote-seat", "Federal Vote/Seat"),
         ("federal-gallagher", "Federal Gallagher"),
@@ -1923,6 +2201,29 @@ body{{background:var(--bg);color:var(--text);font-family:var(--font);
 .src-name{{font-weight:600;font-size:13px;color:var(--text);margin-bottom:4px}}
 .src-detail{{font-size:12px;color:var(--muted);line-height:1.7}}
 
+/* ── Key Findings cards ── */
+.kf-grid{{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:14px;margin:28px 0 0}}
+.kf-card{{background:var(--bg-card2);border:1px solid var(--border);
+  border-radius:10px;padding:20px 22px;position:relative;overflow:hidden}}
+.kf-card::before{{content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(244,131,31,.04) 0%,transparent 60%);
+  pointer-events:none}}
+.kf-num{{font-size:30px;font-weight:700;letter-spacing:-0.5px;line-height:1.1;margin-bottom:6px}}
+.kf-label{{font-size:12px;color:var(--muted);line-height:1.5}}
+
+/* ── Desktop/Mobile chart toggle for 60 Years ── */
+.desktop-chart{{display:block}}
+.mobile-chart{{display:none}}
+.sys-panel{{display:none}}
+.sys-panel.active{{display:block}}
+.sys-sel-wrap{{background:var(--bg-card2);border:1px solid var(--border);
+  border-radius:10px;padding:16px 18px;margin-bottom:14px}}
+.sys-sel-wrap label{{font-size:13px;color:var(--muted);margin-right:10px}}
+.sys-sel-wrap select{{background:var(--bg-card);color:var(--text);
+  border:1px solid var(--border);border-radius:6px;padding:8px 12px;
+  font-size:13px;font-family:var(--font);cursor:pointer;width:100%;margin-top:6px}}
+
 /* ── Footer ── */
 .rpt-footer{{border-top:1px solid var(--border);margin-top:64px;
   padding:22px 48px;color:var(--muted);font-size:12px;
@@ -1952,10 +2253,13 @@ body{{background:var(--bg);color:var(--text);font-family:var(--font);
   #main{{height:auto;overflow-y:unset}}
   .hero{{padding:64px 20px 32px}}
   .hero-stats{{flex-direction:column}}
+  .kf-grid{{grid-template-columns:1fr 1fr}}
   .content{{padding:0 16px 60px}}
   .sec-title{{font-size:18px}}
   .chart-card{{padding:4px}}
   .rpt-footer{{padding:20px;flex-direction:column;gap:4px}}
+  .desktop-chart{{display:none}}
+  .mobile-chart{{display:block}}
 }}
 </style>
 </head>
@@ -2000,6 +2304,35 @@ body{{background:var(--bg);color:var(--text);font-family:var(--font);
 
   <!-- CONTENT -->
   <div class="content">
+
+    <!-- ── KEY FINDINGS ── -->
+    <section id="key-findings" class="rpt-section" style="padding-top:32px">
+      <div class="sec-hdr">
+        <div>
+          <div class="chapter-label">Key Findings</div>
+          <h2 class="sec-title">What the Data Reveals</h2>
+        </div>
+      </div>
+      <div class="kf-grid">
+        <div class="kf-card" style="border-top:3px solid var(--lib)">
+          <div class="kf-num" style="color:var(--lib)">{false_count}/17</div>
+          <div class="kf-label">Ontario elections produced a false majority under FPTP &mdash; a party won unchecked legislative power with less than half the popular vote.</div>
+        </div>
+        <div class="kf-card" style="border-top:3px solid #3D9B35">
+          <div class="kf-num" style="color:#3D9B35">{pr_false}/17</div>
+          <div class="kf-label">False majorities under List PR &mdash; proportional systems eliminate this structural distortion almost entirely.</div>
+        </div>
+        <div class="kf-card" style="border-top:3px solid var(--ndp)">
+          <div class="kf-num" style="color:var(--ndp)">+{pc_bonus:.0f}pp</div>
+          <div class="kf-label">Seat bonus the PCs received in 2022 &mdash; they won {pc_seat_pct:.0f}% of seats with only {pc_vote_pct:.1f}% of votes.</div>
+        </div>
+        <div class="kf-card" style="border-top:3px solid {mmp_color}">
+          <div class="kf-num" style="color:{mmp_color}">{mmp_outcome}</div>
+          <div class="kf-label">PC government outcome in 2022 under MMP &mdash; Ford&rsquo;s supermajority would have become a minority government requiring coalition or compromise.</div>
+        </div>
+      </div>
+    </section>
+    <div class="divider"></div>
 
     <!-- ── GLOSSARY ── -->
     <section id="glossary" class="rpt-section" style="padding-top:40px">
@@ -2195,20 +2528,71 @@ body{{background:var(--bg);color:var(--text);font-family:var(--font);
     <section id="reimagined" class="chapter-section">
       <div class="chapter-hero">
         <h2>Chapter 4 &middot; 60 Years Reimagined</h2>
-        <p>If Ontario had used Mixed-Member Proportional from 1963 onward, how would government
-        composition have differed? Fewer false majorities, more minority governments, and more
-        frequent coalition-building.</p>
+        <p>What if Ontario had used a different electoral system since 1963? This chapter shows
+        seat composition across all six systems for every election. ★ marks a majority government;
+        ○ marks a minority. Notable elections are annotated. On mobile, select a system from the
+        dropdown to compare one panel at a time.</p>
       </div>
     </section>
 
-    {make_section("historical-govt","Chapter 4 · 60 Years Reimagined",
-      "Historical Government Composition — FPTP vs MMP",
-      "The upper panel shows actual seat composition under FPTP; the lower panel shows simulated "
-      "composition under Mixed-Member Proportional. Under MMP, the 1987 Liberal sweep, 1990 NDP "
-      "majority, 1995 Harris PC majority, and 2022 PC supermajority would all have been reduced "
-      "to minority or coalition governments. The dotted line marks the majority threshold.",
-      charts["historical_govt"],
-      "Computed simulations · Elections Ontario 1963–2022")}
+    <section id="historical-govt" class="rpt-section">
+      <div class="sec-hdr">
+        <div>
+          <div class="chapter-label">Chapter 4 &middot; 60 Years Reimagined</div>
+          <h2 class="sec-title">Historical Seat Composition — All Six Systems (1963–2022)</h2>
+        </div>
+        <span class="src-badge">Source: Computed simulations · Elections Ontario 1963–2022</span>
+      </div>
+      <p class="sec-desc">
+        Each panel shows the seat composition Ontario would have had under one electoral system
+        across all 17 elections. ★&nbsp;Maj = majority government; ○&nbsp;Min = minority government.
+        The dotted line marks the 50% majority threshold. Vertical grey lines mark landmark
+        elections: 1987 Liberal sweep, 1990 NDP majority, 1995 Harris revolution, 2018 Ford landslide.
+      </p>
+
+      <!-- Desktop: full 6-panel combined chart -->
+      <div class="chart-card desktop-chart">{charts["historical_govt"]}</div>
+
+      <!-- Mobile: per-system dropdown + individual charts -->
+      <div class="mobile-chart">
+        <div class="sys-sel-wrap">
+          <label for="sys-sel">Select electoral system:</label>
+          <select id="sys-sel">
+            <option value="fptp">FPTP — Actual Results</option>
+            <option value="list_pr_dhondt">List PR — D&apos;Hondt</option>
+            <option value="list_pr_saintlagu">List PR — Sainte-Lagu&euml;</option>
+            <option value="mmp">MMP — Mixed Member Proportional</option>
+            <option value="ams">AMS — Additional Member System</option>
+            <option value="regional_pr_dhondt">Regional PR — D&apos;Hondt</option>
+          </select>
+        </div>
+        <div id="mob-fptp"              class="chart-card sys-panel active">{mobile_sys_charts.get("fptp", "")}</div>
+        <div id="mob-list_pr_dhondt"    class="chart-card sys-panel">{mobile_sys_charts.get("list_pr_dhondt", "")}</div>
+        <div id="mob-list_pr_saintlagu" class="chart-card sys-panel">{mobile_sys_charts.get("list_pr_saintlagu", "")}</div>
+        <div id="mob-mmp"               class="chart-card sys-panel">{mobile_sys_charts.get("mmp", "")}</div>
+        <div id="mob-ams"               class="chart-card sys-panel">{mobile_sys_charts.get("ams", "")}</div>
+        <div id="mob-regional_pr_dhondt" class="chart-card sys-panel">{mobile_sys_charts.get("regional_pr_dhondt", "")}</div>
+      </div>
+    </section>
+    <div class="divider"></div>
+
+    <!-- ── CROSS-SYSTEM SCORECARD TABLE ── -->
+    <section id="cross-sys-scorecard" class="rpt-section">
+      <div class="sec-hdr">
+        <div>
+          <div class="chapter-label">Chapter 4 &middot; 60 Years Reimagined</div>
+          <h2 class="sec-title">Cross-System Scorecard — All 17 Elections</h2>
+        </div>
+        <span class="src-badge">Source: Computed simulations · Elections Ontario 1963–2022</span>
+      </div>
+      <p class="sec-desc">
+        Summary comparison of all six systems averaged across all 17 Ontario elections.
+        The Gallagher Index measures disproportionality (lower is more proportional). The seat
+        bonus shows how much larger the winning party&rsquo;s seat% is than its vote% on average.
+        PR and near-PR systems eliminate false majorities entirely across the full 60-year record.
+      </p>
+      {cross_sys_table_html}
+    </section>
     <div class="divider"></div>
 
     <!-- ── CHAPTER 5 ── -->
@@ -2361,6 +2745,23 @@ body{{background:var(--bg);color:var(--text);font-family:var(--font);
 </div><!-- /main -->
 
 <script>
+// ── System selector (mobile tab view) ──────────────────────
+const sysSel = document.getElementById('sys-sel');
+if (sysSel) {{
+  sysSel.addEventListener('change', () => {{
+    const val = sysSel.value;
+    document.querySelectorAll('.sys-panel').forEach(p => {{
+      p.style.display = 'none';
+      p.classList.remove('active');
+    }});
+    const target = document.getElementById('mob-' + val);
+    if (target) {{
+      target.style.display = 'block';
+      target.classList.add('active');
+    }}
+  }});
+}}
+
 // ── Scrollspy ──────────────────────────────────────────────
 const sections = document.querySelectorAll('section[id]');
 const navLinks  = document.querySelectorAll('#sidebar .nav-link');
@@ -2476,6 +2877,33 @@ def main():
     build("pr_explainer",   "PR Systems Explainer",     chart_pr_systems_explainer)
     build("pr_explainer2",  "PR Systems Explainer (Ch6)", chart_pr_systems_explainer)
 
+    # ── Per-system charts for mobile tab view ─────────────────
+    # Key must be safe for HTML id and must match option values in the select element
+    _SYS_KEYS = {
+        "FPTP":                  "fptp",
+        "List PR d'Hondt":       "list_pr_dhondt",
+        "List PR Sainte-Laguë":  "list_pr_saintlagu",
+        "MMP":                   "mmp",
+        "AMS":                   "ams",
+        "Regional PR d'Hondt":   "regional_pr_dhondt",
+    }
+    print("  Building per-system mobile charts…")
+    mobile_sys_charts = {}
+    for sys_name, sys_title in zip(_ALL_SYSTEMS_ORDER, _ALL_SYSTEMS_TITLES):
+        key = _SYS_KEYS.get(sys_name, sys_name.lower().replace(" ", "_"))
+        print(f"    • {sys_title}")
+        try:
+            mobile_sys_charts[key] = chart_single_system(stats, sys_name, sys_title)
+        except Exception as e:
+            print(f"      [warn] {sys_title} failed: {e}")
+            mobile_sys_charts[key] = (
+                f"<p style='color:#D00000;padding:24px'>Chart unavailable: {e}</p>"
+            )
+
+    # ── Cross-system scorecard table ─────────────────────────
+    print("  • Cross-system scorecard table")
+    cross_sys_table_html = chart_cross_system_scorecard_table(stats)
+
     # ── Riding-level charts ───────────────────────────────────
     riding_charts = {}
     if riding_geojson and riding_election and riding_populations:
@@ -2508,7 +2936,9 @@ def main():
     # ── Assemble HTML ─────────────────────────────────────────
     print("\nAssembling HTML report…")
     html = build_html(charts, stats, false_count, systems_table_html,
-                      riding_charts=riding_charts)
+                      riding_charts=riding_charts,
+                      mobile_sys_charts=mobile_sys_charts,
+                      cross_sys_table_html=cross_sys_table_html)
 
     with open(output_path, "w", encoding="utf-8") as f:
         f.write(html)
