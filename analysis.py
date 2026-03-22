@@ -1640,7 +1640,6 @@ def build_html(charts, stats, false_count, systems_table_html, riding_charts=Non
         ("wasted-votes",      "Wasted Votes"),
         ("false-majorities",  "False Majorities"),
         ("election-2022",     "Ch.2 · 2022 Election"),
-        ("riding-maps",       "Ontario Riding Maps"),
         ("map-fptp",          "2022 FPTP Map"),
         ("seat-comparison",   "Seat Comparison"),
         ("systems-table",     "Systems Table"),
@@ -1914,8 +1913,6 @@ body{{background:var(--bg);color:var(--text);font-family:var(--font);
         different system would have produced.</p>
       </div>
     </section>
-
-    {_riding_maps_section(riding_charts)}
 
     {make_section("map-fptp","Chapter 2 · 2022 Election",
       "2022 Ontario Election — Regional Results (FPTP)",
@@ -2300,10 +2297,6 @@ def main():
                chart_votes_per_seat, riding_election)
         rbuild("population_seat_bias",  "Population vs Votes Scatter",
                chart_population_seat_bias, riding_election, riding_populations)
-        rbuild("map_choropleth",        "Choropleth Map",
-               chart_map_choropleth, riding_election, riding_geojson)
-        rbuild("map_bubble",            "Bubble Map",
-               chart_map_bubble, riding_election, riding_geojson)
     else:
         print("  [skip] Riding-level charts skipped (data files missing)")
 
