@@ -1265,6 +1265,7 @@ def chart_votes_per_seat(results):
         xaxis=dict(title="Votes Received per Seat Won", tickformat=","),
         yaxis=dict(title=""),
         showlegend=False,
+        margin=dict(t=70, b=55, l=80, r=260),
     ))
     return to_html(fig)
 
