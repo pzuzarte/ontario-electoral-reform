@@ -1643,6 +1643,7 @@ def build_html(charts, stats, false_count, systems_table_html, riding_charts=Non
 
     nav_items = [
         ("hero",              "Overview"),
+        ("glossary",          "Glossary"),
         ("the-problem",       "Ch.1 · The Problem"),
         ("vote-seat-gap",     "Vote vs Seat Gap"),
         ("gallagher-history", "Gallagher History"),
@@ -1863,6 +1864,47 @@ body{{background:var(--bg);color:var(--text);font-family:var(--font);
 
   <!-- CONTENT -->
   <div class="content">
+
+    <!-- ── GLOSSARY ── -->
+    <section id="glossary" class="rpt-section" style="padding-top:40px">
+      <div class="sec-hdr">
+        <div><h2 class="sec-title">Glossary of Terms</h2></div>
+      </div>
+      <div style="background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:24px 28px;">
+        <dl style="display:grid;grid-template-columns:max-content 1fr;gap:10px 24px;margin:0;">
+          <dt style="font-weight:700;color:#E6EDF3;white-space:nowrap;">FPTP</dt>
+          <dd style="color:#8B949E;margin:0;"><strong style="color:#CDD9E5;">First Past the Post</strong> — The current Ontario system. Each riding elects one representative; the candidate with the most votes wins, regardless of whether they received a majority. All other votes elect no one.</dd>
+
+          <dt style="font-weight:700;color:#E6EDF3;white-space:nowrap;">PR</dt>
+          <dd style="color:#8B949E;margin:0;"><strong style="color:#CDD9E5;">Proportional Representation</strong> — A family of electoral systems designed so that a party's share of seats closely matches its share of votes province-wide.</dd>
+
+          <dt style="font-weight:700;color:#E6EDF3;white-space:nowrap;">List PR</dt>
+          <dd style="color:#8B949E;margin:0;"><strong style="color:#CDD9E5;">Party List Proportional Representation</strong> — Voters choose a party rather than a candidate. Seats are allocated to parties in proportion to their vote share using a formula (d'Hondt or Sainte-Laguë). Can be province-wide or by region.</dd>
+
+          <dt style="font-weight:700;color:#E6EDF3;white-space:nowrap;">D'Hondt</dt>
+          <dd style="color:#8B949E;margin:0;"><strong style="color:#CDD9E5;">D'Hondt Method</strong> — A seat-allocation formula used in List PR. Seats are awarded one at a time to the party with the highest quotient (votes ÷ seats already won + 1). Slightly favours larger parties.</dd>
+
+          <dt style="font-weight:700;color:#E6EDF3;white-space:nowrap;">Sainte-Laguë</dt>
+          <dd style="color:#8B949E;margin:0;"><strong style="color:#CDD9E5;">Sainte-Laguë Method</strong> — An alternative seat-allocation formula using odd-number divisors (1, 3, 5 …). More neutral between large and small parties than d'Hondt.</dd>
+
+          <dt style="font-weight:700;color:#E6EDF3;white-space:nowrap;">MMP</dt>
+          <dd style="color:#8B949E;margin:0;"><strong style="color:#CDD9E5;">Mixed Member Proportional</strong> — A hybrid system used in Germany and New Zealand. Voters cast two ballots: one for a local riding representative (FPTP-style) and one for a party list. List "top-up" seats are added to make the overall result proportional to the party vote.</dd>
+
+          <dt style="font-weight:700;color:#E6EDF3;white-space:nowrap;">AMS</dt>
+          <dd style="color:#8B949E;margin:0;"><strong style="color:#CDD9E5;">Additional Member System</strong> — Similar to MMP but with a higher ratio of FPTP seats to list seats (typically 2:1 rather than 1:1). Used in Scotland and Wales. Less proportional than MMP but retains more local representation.</dd>
+
+          <dt style="font-weight:700;color:#E6EDF3;white-space:nowrap;">Gallagher Index</dt>
+          <dd style="color:#8B949E;margin:0;"><strong style="color:#CDD9E5;">Least Squares Index of Disproportionality</strong> — A single number measuring how far a result deviates from proportionality. Calculated as √(½ × Σ(vote%&nbsp;−&nbsp;seat%)²). A score below 5 is considered low; above 10 is high; Ontario's 2022 score of 22.8 is among the worst in the developed world.</dd>
+
+          <dt style="font-weight:700;color:#E6EDF3;white-space:nowrap;">MPP</dt>
+          <dd style="color:#8B949E;margin:0;"><strong style="color:#CDD9E5;">Member of Provincial Parliament</strong> — An elected representative in the Ontario Legislative Assembly.</dd>
+
+          <dt style="font-weight:700;color:#E6EDF3;white-space:nowrap;">STV</dt>
+          <dd style="color:#8B949E;margin:0;"><strong style="color:#CDD9E5;">Single Transferable Vote</strong> — A ranked-choice PR system used in Ireland and the Australian Senate. Multi-member ridings elect several representatives; voters rank candidates and surplus votes are transferred until all seats are filled. Not modelled in this report as it requires full ranked-ballot data.</dd>
+        </dl>
+      </div>
+    </section>
+    <div class="divider"></div>
 
     <!-- ── CHAPTER 1 ── -->
     <section id="the-problem" class="chapter-section">
