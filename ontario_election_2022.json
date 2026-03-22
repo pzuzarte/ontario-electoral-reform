@@ -1,0 +1,870 @@
+{
+  "London North Centre": {
+    "party": "NDP",
+    "votes": 43085,
+    "winner": "TERENCE KERNAGHAN",
+    "eligible_voters": 102767,
+    "voter_turnout": 43295
+  },
+  "Markham—Unionville": {
+    "party": "PC",
+    "votes": 35422,
+    "winner": "BILLY PANG",
+    "eligible_voters": 91097,
+    "voter_turnout": 35638
+  },
+  "Ajax": {
+    "party": "PC",
+    "votes": 37687,
+    "winner": "PATRICE BARNES",
+    "eligible_voters": 94835,
+    "voter_turnout": 37896
+  },
+  "Algoma—Manitoulin": {
+    "party": "NDP",
+    "votes": 24499,
+    "winner": "MICHAEL MANTHA",
+    "eligible_voters": 58076,
+    "voter_turnout": 24663
+  },
+  "Aurora—Oak Ridges—Richmond Hill": {
+    "party": "PC",
+    "votes": 32559,
+    "winner": "MICHAEL PARSA",
+    "eligible_voters": 85709,
+    "voter_turnout": 32735
+  },
+  "Barrie—Innisfil": {
+    "party": "PC",
+    "votes": 36272,
+    "winner": "ANDREA KHANJIN",
+    "eligible_voters": 92137,
+    "voter_turnout": 36500
+  },
+  "Barrie—Springwater—Oro-Medonte": {
+    "party": "PC",
+    "votes": 39500,
+    "winner": "DOUG DOWNEY",
+    "eligible_voters": 84950,
+    "voter_turnout": 39710
+  },
+  "Bay of Quinte": {
+    "party": "PC",
+    "votes": 43366,
+    "winner": "TODD SMITH",
+    "eligible_voters": 94852,
+    "voter_turnout": 43545
+  },
+  "Niagara Centre": {
+    "party": "NDP",
+    "votes": 41208,
+    "winner": "JEFF BURCH",
+    "eligible_voters": 95459,
+    "voter_turnout": 41402
+  },
+  "Oakville North—Burlington": {
+    "party": "PC",
+    "votes": 47095,
+    "winner": "EFFIE TRIANTAFILOPOULOS",
+    "eligible_voters": 101071,
+    "voter_turnout": 47389
+  },
+  "Beaches—East York": {
+    "party": "Liberal",
+    "votes": 40648,
+    "winner": "MARY-MARGARET MCMAHON",
+    "eligible_voters": 82279,
+    "voter_turnout": 40791
+  },
+  "Brampton Centre": {
+    "party": "PC",
+    "votes": 24463,
+    "winner": "CHARMAINE WILLIAMS",
+    "eligible_voters": 67093,
+    "voter_turnout": 24602
+  },
+  "Brampton East": {
+    "party": "PC",
+    "votes": 29036,
+    "winner": "HARDEEP GREWAL",
+    "eligible_voters": 80463,
+    "voter_turnout": 29249
+  },
+  "Brampton North": {
+    "party": "PC",
+    "votes": 30025,
+    "winner": "GRAHAM MCGREGOR",
+    "eligible_voters": 78586,
+    "voter_turnout": 30228
+  },
+  "Brampton South": {
+    "party": "PC",
+    "votes": 28602,
+    "winner": "PRABMEET SINGH SARKARIA",
+    "eligible_voters": 80195,
+    "voter_turnout": 28714
+  },
+  "Brampton West": {
+    "party": "PC",
+    "votes": 30836,
+    "winner": "AMARJOT SANDHU",
+    "eligible_voters": 90617,
+    "voter_turnout": 30983
+  },
+  "Brantford—Brant": {
+    "party": "PC",
+    "votes": 46953,
+    "winner": "WILL BOUMA",
+    "eligible_voters": 112204,
+    "voter_turnout": 47187
+  },
+  "Bruce—Grey—Owen Sound": {
+    "party": "PC",
+    "votes": 41811,
+    "winner": "RICK BYERS",
+    "eligible_voters": 89703,
+    "voter_turnout": 42180
+  },
+  "Burlington": {
+    "party": "PC",
+    "votes": 52520,
+    "winner": "NATALIE PIERRE",
+    "eligible_voters": 102249,
+    "voter_turnout": 52789
+  },
+  "Cambridge": {
+    "party": "PC",
+    "votes": 39401,
+    "winner": "BRIAN RIDDELL",
+    "eligible_voters": 91608,
+    "voter_turnout": 39591
+  },
+  "Carleton": {
+    "party": "PC",
+    "votes": 46306,
+    "winner": "GOLDIE GHAMARI",
+    "eligible_voters": 95232,
+    "voter_turnout": 46463
+  },
+  "Chatham-Kent—Leamington": {
+    "party": "PC",
+    "votes": 36870,
+    "winner": "TREVOR JONES",
+    "eligible_voters": 86769,
+    "voter_turnout": 38934
+  },
+  "Davenport": {
+    "party": "NDP",
+    "votes": 35473,
+    "winner": "MARIT STILES",
+    "eligible_voters": 82547,
+    "voter_turnout": 35745
+  },
+  "Don Valley East": {
+    "party": "Liberal",
+    "votes": 28076,
+    "winner": "ADIL SHAMJI",
+    "eligible_voters": 66841,
+    "voter_turnout": 28323
+  },
+  "Don Valley North": {
+    "party": "PC",
+    "votes": 31728,
+    "winner": "VINCENT KE",
+    "eligible_voters": 78300,
+    "voter_turnout": 31913
+  },
+  "Don Valley West": {
+    "party": "Liberal",
+    "votes": 36760,
+    "winner": "STEPHANIE BOWMAN",
+    "eligible_voters": 74921,
+    "voter_turnout": 36978
+  },
+  "Dufferin—Caledon": {
+    "party": "PC",
+    "votes": 46127,
+    "winner": "SYLVIA JONES",
+    "eligible_voters": 110230,
+    "voter_turnout": 46373
+  },
+  "Durham": {
+    "party": "PC",
+    "votes": 49320,
+    "winner": "TODD MCCARTHY",
+    "eligible_voters": 113389,
+    "voter_turnout": 49562
+  },
+  "Eglinton—Lawrence": {
+    "party": "PC",
+    "votes": 39258,
+    "winner": "ROBIN MARTIN",
+    "eligible_voters": 84513,
+    "voter_turnout": 39485
+  },
+  "Elgin—Middlesex—London": {
+    "party": "PC",
+    "votes": 43791,
+    "winner": "ROB FLACK",
+    "eligible_voters": 98326,
+    "voter_turnout": 44027
+  },
+  "Essex": {
+    "party": "PC",
+    "votes": 48780,
+    "winner": "ANTHONY LEARDI",
+    "eligible_voters": 103848,
+    "voter_turnout": 49025
+  },
+  "Etobicoke Centre": {
+    "party": "PC",
+    "votes": 45351,
+    "winner": "KINGA SURMA",
+    "eligible_voters": 94024,
+    "voter_turnout": 45645
+  },
+  "Etobicoke—Lakeshore": {
+    "party": "PC",
+    "votes": 47966,
+    "winner": "CHRISTINE HOGARTH",
+    "eligible_voters": 106499,
+    "voter_turnout": 48221
+  },
+  "Etobicoke North": {
+    "party": "PC",
+    "votes": 25103,
+    "winner": "DOUG FORD",
+    "eligible_voters": 74449,
+    "voter_turnout": 25301
+  },
+  "Flamborough—Glanbrook": {
+    "party": "PC",
+    "votes": 43951,
+    "winner": "DONNA SKELLY",
+    "eligible_voters": 94203,
+    "voter_turnout": 44193
+  },
+  "Glengarry—Prescott—Russell": {
+    "party": "PC",
+    "votes": 44382,
+    "winner": "STÉPHANE SARRAZIN",
+    "eligible_voters": 98155,
+    "voter_turnout": 44724
+  },
+  "Guelph": {
+    "party": "Green",
+    "votes": 54638,
+    "winner": "MIKE SCHREINER",
+    "eligible_voters": 111147,
+    "voter_turnout": 54898
+  },
+  "Haldimand—Norfolk": {
+    "party": "Independent",
+    "votes": 45427,
+    "winner": "BOBBI ANN BRADY",
+    "eligible_voters": 93450,
+    "voter_turnout": 45679
+  },
+  "Haliburton—Kawartha Lakes—Brock": {
+    "party": "PC",
+    "votes": 48926,
+    "winner": "LAURIE SCOTT",
+    "eligible_voters": 102400,
+    "voter_turnout": 49292
+  },
+  "Hamilton Centre": {
+    "party": "NDP",
+    "votes": 29147,
+    "winner": "ANDREA HORWATH",
+    "eligible_voters": 77599,
+    "voter_turnout": 29438
+  },
+  "Hamilton East—Stoney Creek": {
+    "party": "PC",
+    "votes": 35166,
+    "winner": "NEIL LUMSDEN",
+    "eligible_voters": 86964,
+    "voter_turnout": 35615
+  },
+  "Hamilton Mountain": {
+    "party": "NDP",
+    "votes": 34034,
+    "winner": "MONIQUE TAYLOR",
+    "eligible_voters": 82518,
+    "voter_turnout": 34234
+  },
+  "Hamilton West—Ancaster—Dundas": {
+    "party": "NDP",
+    "votes": 45017,
+    "winner": "SANDY SHAW",
+    "eligible_voters": 93526,
+    "voter_turnout": 45310
+  },
+  "Hastings—Lennox and Addington": {
+    "party": "PC",
+    "votes": 38184,
+    "winner": "RIC BRESEE",
+    "eligible_voters": 81418,
+    "voter_turnout": 38362
+  },
+  "Humber River—Black Creek": {
+    "party": "NDP",
+    "votes": 23078,
+    "winner": "TOM RAKOCEVIC",
+    "eligible_voters": 70632,
+    "voter_turnout": 23415
+  },
+  "Huron—Bruce": {
+    "party": "PC",
+    "votes": 46892,
+    "winner": "LISA THOMPSON",
+    "eligible_voters": 87090,
+    "voter_turnout": 47169
+  },
+  "Kanata—Carleton": {
+    "party": "PC",
+    "votes": 45569,
+    "winner": "MERRILEE FULLERTON",
+    "eligible_voters": 88936,
+    "voter_turnout": 45695
+  },
+  "Kenora—Rainy River": {
+    "party": "PC",
+    "votes": 16059,
+    "winner": "GREG RICKFORD",
+    "eligible_voters": 40525,
+    "voter_turnout": 16294
+  },
+  "King—Vaughan": {
+    "party": "PC",
+    "votes": 40897,
+    "winner": "STEPHEN LECCE",
+    "eligible_voters": 103344,
+    "voter_turnout": 41125
+  },
+  "Kingston and the Islands": {
+    "party": "Liberal",
+    "votes": 48749,
+    "winner": "TED HSU",
+    "eligible_voters": 104601,
+    "voter_turnout": 48998
+  },
+  "Kitchener Centre": {
+    "party": "NDP",
+    "votes": 38902,
+    "winner": "LAURA MAE LINDO",
+    "eligible_voters": 84747,
+    "voter_turnout": 39164
+  },
+  "Kitchener—Conestoga": {
+    "party": "PC",
+    "votes": 37589,
+    "winner": "MIKE HARRIS",
+    "eligible_voters": 77379,
+    "voter_turnout": 37823
+  },
+  "Kitchener South—Hespeler": {
+    "party": "PC",
+    "votes": 34496,
+    "winner": "JESS DIXON",
+    "eligible_voters": 82450,
+    "voter_turnout": 34762
+  },
+  "Lambton—Kent—Middlesex": {
+    "party": "PC",
+    "votes": 42399,
+    "winner": "MONTE MCNAUGHTON",
+    "eligible_voters": 90221,
+    "voter_turnout": 42652
+  },
+  "Lanark—Frontenac—Kingston": {
+    "party": "PC",
+    "votes": 44185,
+    "winner": "JOHN JORDAN",
+    "eligible_voters": 88832,
+    "voter_turnout": 44438
+  },
+  "Leeds—Grenville—Thousand Islands and Rideau Lakes": {
+    "party": "PC",
+    "votes": 42744,
+    "winner": "STEVE CLARK",
+    "eligible_voters": 87378,
+    "voter_turnout": 42971
+  },
+  "London—Fanshawe": {
+    "party": "NDP",
+    "votes": 34260,
+    "winner": "TERESA ARMSTRONG",
+    "eligible_voters": 94342,
+    "voter_turnout": 34488
+  },
+  "London West": {
+    "party": "NDP",
+    "votes": 49882,
+    "winner": "PEGGY SATTLER",
+    "eligible_voters": 103127,
+    "voter_turnout": 50139
+  },
+  "Markham—Stouffville": {
+    "party": "PC",
+    "votes": 43723,
+    "winner": "PAUL CALANDRA",
+    "eligible_voters": 98749,
+    "voter_turnout": 43952
+  },
+  "Markham—Thornhill": {
+    "party": "PC",
+    "votes": 28699,
+    "winner": "LOGAN KANAPATHI",
+    "eligible_voters": 72633,
+    "voter_turnout": 28820
+  },
+  "Milton": {
+    "party": "PC",
+    "votes": 38927,
+    "winner": "PARM GILL",
+    "eligible_voters": 91696,
+    "voter_turnout": 39158
+  },
+  "Mississauga Centre": {
+    "party": "PC",
+    "votes": 33758,
+    "winner": "NATALIA KUSENDOVA",
+    "eligible_voters": 89218,
+    "voter_turnout": 34029
+  },
+  "Mississauga East—Cooksville": {
+    "party": "PC",
+    "votes": 33828,
+    "winner": "KALEED RASHEED",
+    "eligible_voters": 86019,
+    "voter_turnout": 34050
+  },
+  "Mississauga—Erin Mills": {
+    "party": "PC",
+    "votes": 37235,
+    "winner": "SHEREF SABAWY",
+    "eligible_voters": 89926,
+    "voter_turnout": 37497
+  },
+  "Mississauga—Lakeshore": {
+    "party": "PC",
+    "votes": 42890,
+    "winner": "RUDY CUZZETTO",
+    "eligible_voters": 91778,
+    "voter_turnout": 43087
+  },
+  "Mississauga—Malton": {
+    "party": "PC",
+    "votes": 29023,
+    "winner": "DEEPAK ANAND",
+    "eligible_voters": 80059,
+    "voter_turnout": 29233
+  },
+  "Mississauga—Streetsville": {
+    "party": "PC",
+    "votes": 37989,
+    "winner": "NINA TANGRI",
+    "eligible_voters": 89334,
+    "voter_turnout": 38119
+  },
+  "Nepean": {
+    "party": "PC",
+    "votes": 43617,
+    "winner": "LISA MACLEOD",
+    "eligible_voters": 95599,
+    "voter_turnout": 43866
+  },
+  "Newmarket—Aurora": {
+    "party": "PC",
+    "votes": 41523,
+    "winner": "DAWN GALLAGHER MURPHY",
+    "eligible_voters": 93983,
+    "voter_turnout": 41743
+  },
+  "Niagara Falls": {
+    "party": "NDP",
+    "votes": 50344,
+    "winner": "WAYNE GATES",
+    "eligible_voters": 116171,
+    "voter_turnout": 50653
+  },
+  "Niagara West": {
+    "party": "PC",
+    "votes": 41796,
+    "winner": "SAM OOSTERHOFF",
+    "eligible_voters": 79089,
+    "voter_turnout": 42047
+  },
+  "Nickel Belt": {
+    "party": "NDP",
+    "votes": 30747,
+    "winner": "FRANCE GÉLINAS",
+    "eligible_voters": 67858,
+    "voter_turnout": 30884
+  },
+  "Nipissing": {
+    "party": "PC",
+    "votes": 30659,
+    "winner": "VIC FEDELI",
+    "eligible_voters": 63993,
+    "voter_turnout": 30900
+  },
+  "Northumberland—Peterborough South": {
+    "party": "PC",
+    "votes": 51871,
+    "winner": "DAVID PICCINI",
+    "eligible_voters": 100788,
+    "voter_turnout": 52129
+  },
+  "Oakville": {
+    "party": "PC",
+    "votes": 46569,
+    "winner": "STEPHEN CRAWFORD",
+    "eligible_voters": 93268,
+    "voter_turnout": 46903
+  },
+  "Orléans": {
+    "party": "Liberal",
+    "votes": 51839,
+    "winner": "STEPHEN BLAIS",
+    "eligible_voters": 111660,
+    "voter_turnout": 52024
+  },
+  "Oshawa": {
+    "party": "NDP",
+    "votes": 40809,
+    "winner": "JENNIFER FRENCH",
+    "eligible_voters": 103853,
+    "voter_turnout": 41004
+  },
+  "Ottawa Centre": {
+    "party": "NDP",
+    "votes": 55781,
+    "winner": "JOEL HARDEN",
+    "eligible_voters": 110463,
+    "voter_turnout": 56047
+  },
+  "Ottawa South": {
+    "party": "Liberal",
+    "votes": 40500,
+    "winner": "JOHN FRASER",
+    "eligible_voters": 95991,
+    "voter_turnout": 40779
+  },
+  "Ottawa—Vanier": {
+    "party": "Liberal",
+    "votes": 38673,
+    "winner": "LUCILLE COLLARD",
+    "eligible_voters": 98774,
+    "voter_turnout": 38936
+  },
+  "Ottawa West—Nepean": {
+    "party": "NDP",
+    "votes": 41814,
+    "winner": "CHANDRA PASMA",
+    "eligible_voters": 89436,
+    "voter_turnout": 42415
+  },
+  "Oxford": {
+    "party": "PC",
+    "votes": 44321,
+    "winner": "ERNIE HARDEMAN",
+    "eligible_voters": 95927,
+    "voter_turnout": 44561
+  },
+  "Parkdale—High Park": {
+    "party": "NDP",
+    "votes": 42664,
+    "winner": "BHUTILA KARPOCHE",
+    "eligible_voters": 85352,
+    "voter_turnout": 42892
+  },
+  "Parry Sound—Muskoka": {
+    "party": "PC",
+    "votes": 44558,
+    "winner": "GRAYDON SMITH",
+    "eligible_voters": 84280,
+    "voter_turnout": 44745
+  },
+  "Perth—Wellington": {
+    "party": "PC",
+    "votes": 41597,
+    "winner": "MATTHEW RAE",
+    "eligible_voters": 83497,
+    "voter_turnout": 41826
+  },
+  "Peterborough—Kawartha": {
+    "party": "PC",
+    "votes": 52373,
+    "winner": "DAVE SMITH",
+    "eligible_voters": 102163,
+    "voter_turnout": 52579
+  },
+  "Pickering—Uxbridge": {
+    "party": "PC",
+    "votes": 43232,
+    "winner": "PETER BETHLENFALVY",
+    "eligible_voters": 96164,
+    "voter_turnout": 43553
+  },
+  "Renfrew—Nipissing—Pembroke": {
+    "party": "PC",
+    "votes": 40188,
+    "winner": "JOHN YAKABUSKI",
+    "eligible_voters": 87343,
+    "voter_turnout": 40427
+  },
+  "Richmond Hill": {
+    "party": "PC",
+    "votes": 30796,
+    "winner": "DAISY WAI",
+    "eligible_voters": 85825,
+    "voter_turnout": 31018
+  },
+  "St. Catharines": {
+    "party": "NDP",
+    "votes": 43136,
+    "winner": "JENNIE STEVENS",
+    "eligible_voters": 92924,
+    "voter_turnout": 43360
+  },
+  "Sarnia—Lambton": {
+    "party": "PC",
+    "votes": 40181,
+    "winner": "BOB BAILEY",
+    "eligible_voters": 86735,
+    "voter_turnout": 40496
+  },
+  "Sault Ste. Marie": {
+    "party": "PC",
+    "votes": 26884,
+    "winner": "ROSS ROMANO",
+    "eligible_voters": 60748,
+    "voter_turnout": 27027
+  },
+  "Scarborough—Agincourt": {
+    "party": "PC",
+    "votes": 28636,
+    "winner": "ARIS BABIKIAN",
+    "eligible_voters": 73032,
+    "voter_turnout": 28795
+  },
+  "Scarborough Centre": {
+    "party": "PC",
+    "votes": 31869,
+    "winner": "DAVID SMITH",
+    "eligible_voters": 77858,
+    "voter_turnout": 32120
+  },
+  "Scarborough—Guildwood": {
+    "party": "Liberal",
+    "votes": 28949,
+    "winner": "MITZIE HUNTER",
+    "eligible_voters": 70153,
+    "voter_turnout": 29205
+  },
+  "Scarborough North": {
+    "party": "PC",
+    "votes": 26177,
+    "winner": "RAYMOND CHO",
+    "eligible_voters": 67032,
+    "voter_turnout": 26318
+  },
+  "Scarborough—Rouge Park": {
+    "party": "PC",
+    "votes": 35312,
+    "winner": "VIJAY THANIGASALAM",
+    "eligible_voters": 78567,
+    "voter_turnout": 35447
+  },
+  "Scarborough Southwest": {
+    "party": "NDP",
+    "votes": 35326,
+    "winner": "DOLY BEGUM",
+    "eligible_voters": 80222,
+    "voter_turnout": 35573
+  },
+  "Simcoe—Grey": {
+    "party": "PC",
+    "votes": 52886,
+    "winner": "BRIAN SAUNDERSON",
+    "eligible_voters": 122113,
+    "voter_turnout": 53141
+  },
+  "Simcoe North": {
+    "party": "PC",
+    "votes": 46265,
+    "winner": "JILL DUNLOP",
+    "eligible_voters": 100537,
+    "voter_turnout": 46493
+  },
+  "Spadina—Fort York": {
+    "party": "NDP",
+    "votes": 33857,
+    "winner": "CHRIS GLOVER",
+    "eligible_voters": 99220,
+    "voter_turnout": 34087
+  },
+  "Stormont—Dundas—South Glengarry": {
+    "party": "PC",
+    "votes": 36114,
+    "winner": "NOLAN QUINN",
+    "eligible_voters": 87263,
+    "voter_turnout": 36328
+  },
+  "Sudbury": {
+    "party": "NDP",
+    "votes": 29410,
+    "winner": "JAMIE WEST",
+    "eligible_voters": 66394,
+    "voter_turnout": 29613
+  },
+  "Thornhill": {
+    "party": "PC",
+    "votes": 34522,
+    "winner": "LAURA SMITH",
+    "eligible_voters": 87313,
+    "voter_turnout": 34820
+  },
+  "Thunder Bay—Atikokan": {
+    "party": "PC",
+    "votes": 26598,
+    "winner": "KEVIN HOLLAND",
+    "eligible_voters": 62107,
+    "voter_turnout": 26761
+  },
+  "Thunder Bay—Superior North": {
+    "party": "NDP",
+    "votes": 24634,
+    "winner": "LISE VAUGEOIS",
+    "eligible_voters": 57352,
+    "voter_turnout": 24799
+  },
+  "Timiskaming—Cochrane": {
+    "party": "NDP",
+    "votes": 22779,
+    "winner": "JOHN VANTHOF",
+    "eligible_voters": 53830,
+    "voter_turnout": 22936
+  },
+  "Timmins": {
+    "party": "PC",
+    "votes": 14437,
+    "winner": "GEORGE PIRIE",
+    "eligible_voters": 33386,
+    "voter_turnout": 14535
+  },
+  "Toronto Centre": {
+    "party": "NDP",
+    "votes": 34921,
+    "winner": "KRISTYN WONG-TAM",
+    "eligible_voters": 88268,
+    "voter_turnout": 35145
+  },
+  "Toronto—Danforth": {
+    "party": "NDP",
+    "votes": 41324,
+    "winner": "PETER TABUNS",
+    "eligible_voters": 84085,
+    "voter_turnout": 41568
+  },
+  "Toronto—St. Paul's": {
+    "party": "NDP",
+    "votes": 42179,
+    "winner": "JILL ANDREW",
+    "eligible_voters": 88424,
+    "voter_turnout": 42507
+  },
+  "University—Rosedale": {
+    "party": "NDP",
+    "votes": 37181,
+    "winner": "JESSICA BELL",
+    "eligible_voters": 86500,
+    "voter_turnout": 37370
+  },
+  "Vaughan—Woodbridge": {
+    "party": "PC",
+    "votes": 35958,
+    "winner": "MICHAEL TIBOLLO",
+    "eligible_voters": 82215,
+    "voter_turnout": 36200
+  },
+  "Waterloo": {
+    "party": "NDP",
+    "votes": 44922,
+    "winner": "CATHERINE FIFE",
+    "eligible_voters": 93235,
+    "voter_turnout": 45138
+  },
+  "Wellington—Halton Hills": {
+    "party": "PC",
+    "votes": 49493,
+    "winner": "TED ARNOTT",
+    "eligible_voters": 102911,
+    "voter_turnout": 49787
+  },
+  "Whitby": {
+    "party": "PC",
+    "votes": 46104,
+    "winner": "LORNE COE",
+    "eligible_voters": 103309,
+    "voter_turnout": 46366
+  },
+  "Willowdale": {
+    "party": "PC",
+    "votes": 31583,
+    "winner": "STAN CHO",
+    "eligible_voters": 79942,
+    "voter_turnout": 31845
+  },
+  "Windsor—Tecumseh": {
+    "party": "PC",
+    "votes": 38551,
+    "winner": "ANDREW DOWIE",
+    "eligible_voters": 95488,
+    "voter_turnout": 38779
+  },
+  "Windsor West": {
+    "party": "NDP",
+    "votes": 31752,
+    "winner": "LISA GRETZKY",
+    "eligible_voters": 95295,
+    "voter_turnout": 32039
+  },
+  "York Centre": {
+    "party": "PC",
+    "votes": 28128,
+    "winner": "MICHAEL KERZNER",
+    "eligible_voters": 73101,
+    "voter_turnout": 28467
+  },
+  "York—Simcoe": {
+    "party": "PC",
+    "votes": 36628,
+    "winner": "CAROLINE MULRONEY",
+    "eligible_voters": 94324,
+    "voter_turnout": 36791
+  },
+  "York South—Weston": {
+    "party": "PC",
+    "votes": 30432,
+    "winner": "MICHAEL FORD",
+    "eligible_voters": 80567,
+    "voter_turnout": 30703
+  },
+  "Kiiwetinoong": {
+    "party": "NDP",
+    "votes": 4763,
+    "winner": "SOL MAMAKWA",
+    "eligible_voters": 15782,
+    "voter_turnout": 4798
+  },
+  "Mushkegowuk—James Bay": {
+    "party": "NDP",
+    "votes": 7255,
+    "winner": "GUY BOURGOUIN",
+    "eligible_voters": 18483,
+    "voter_turnout": 7283
+  }
+}

@@ -71,6 +71,86 @@ ONTARIO_REGIONS_2022 = {
 }
 
 # ════════════════════════════════════════════════════════════════════════════
+# RIDING-LEVEL DATA LOADING
+# ════════════════════════════════════════════════════════════════════════════
+
+def classify_riding(population):
+    """Classify a riding by population into urban/suburban/rural type."""
+    if population < 80000:
+        return "Remote/Northern"
+    elif population < 110000:
+        return "Rural / Small City"
+    elif population < 125000:
+        return "Suburban"
+    else:
+        return "Urban / High-Growth"
+
+
+RIDING_TYPE_COLORS = {
+    "Remote/Northern":   "#9333EA",  # purple
+    "Rural / Small City": "#F4831F", # orange
+    "Suburban":          "#003F7F",  # blue
+    "Urban / High-Growth": "#D00000", # red
+}
+
+
+def load_riding_data():
+    """Load riding-level GeoJSON, election results and populations.
+
+    Returns (geojson, results, populations) or (None, None, None) on failure.
+    """
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+
+    geojson_path  = os.path.join(script_dir, "ontario_ridings.geojson")
+    results_path  = os.path.join(script_dir, "ontario_election_2022.json")
+    pop_path      = os.path.join(script_dir, "ontario_riding_populations.json")
+
+    try:
+        with open(geojson_path, "r", encoding="utf-8") as f:
+            geojson = json.load(f)
+        with open(results_path, "r", encoding="utf-8") as f:
+            results = json.load(f)
+        with open(pop_path, "r", encoding="utf-8") as f:
+            populations = json.load(f)
+        print(f"  [ok] Loaded riding data: {len(geojson['features'])} ridings, "
+              f"{len(results)} results, {len(populations)} populations")
+        return geojson, results, populations
+    except FileNotFoundError as e:
+        print(f"  [skip] Riding data file missing: {e}")
+        return None, None, None
+    except Exception as e:
+        print(f"  [skip] Riding data load failed: {e}")
+        return None, None, None
+
+
+def get_riding_centroids(geojson):
+    """Compute centroid lon/lat for each riding feature (simple coordinate mean)."""
+    centroids = {}
+    for feature in geojson.get("features", []):
+        name = feature["properties"].get("name", "")
+        geom = feature.get("geometry", {})
+        geom_type = geom.get("type", "")
+        coords_flat = []
+
+        if geom_type == "Polygon":
+            rings = geom.get("coordinates", [])
+            if rings:
+                coords_flat = rings[0]  # exterior ring
+        elif geom_type == "MultiPolygon":
+            polys = geom.get("coordinates", [])
+            for poly in polys:
+                if poly:
+                    coords_flat.extend(poly[0])  # exterior ring of each polygon
+
+        if coords_flat:
+            lons = [c[0] for c in coords_flat]
+            lats = [c[1] for c in coords_flat]
+            centroids[name] = (sum(lons) / len(lons), sum(lats) / len(lats))
+
+    return centroids
+
+
+# ════════════════════════════════════════════════════════════════════════════
 # PARTY COLORS & STYLE
 # ════════════════════════════════════════════════════════════════════════════
 
@@ -1043,8 +1123,489 @@ def chart_pr_systems_explainer():
 
 
 # ════════════════════════════════════════════════════════════════════════════
+# RIDING-LEVEL CHARTS
+# ════════════════════════════════════════════════════════════════════════════
+
+def chart_population_disparity(results, populations, geojson):
+    """Histogram + box plot of riding populations by type."""
+    ridings = list(populations.keys())
+    pops    = [populations[r] for r in ridings]
+    types   = [classify_riding(p) for p in pops]
+
+    type_order = ["Remote/Northern", "Rural / Small City", "Suburban", "Urban / High-Growth"]
+
+    fig = make_subplots(
+        rows=1, cols=2,
+        subplot_titles=["Population Distribution by Riding Type",
+                        "Population Spread by Riding Type"],
+        column_widths=[0.6, 0.4],
+    )
+
+    # ── Left: histogram coloured by riding type ──────────────
+    bin_size = 10000
+    for rt in type_order:
+        color = RIDING_TYPE_COLORS[rt]
+        rt_pops = [p for p, t in zip(pops, types) if t == rt]
+        if not rt_pops:
+            continue
+        fig.add_trace(go.Histogram(
+            x=rt_pops,
+            name=rt,
+            marker_color=color,
+            opacity=0.75,
+            xbins=dict(start=0, end=max(pops) + bin_size, size=bin_size),
+            hovertemplate=f"<b>{rt}</b><br>Population: %{{x}}<br>Count: %{{y}}<extra></extra>",
+        ), row=1, col=1)
+
+    mean_pop   = sum(pops) / len(pops)
+    median_pop = sorted(pops)[len(pops) // 2]
+    fig.add_vline(x=mean_pop,   line_dash="dash",  line_color="#00F5D4",
+                  line_width=1.5, row=1, col=1,
+                  annotation_text=f"Mean {mean_pop/1000:.0f}k",
+                  annotation_font=dict(color="#00F5D4", size=11))
+    fig.add_vline(x=median_pop, line_dash="dot",   line_color="#FFD60A",
+                  line_width=1.5, row=1, col=1,
+                  annotation_text=f"Median {median_pop/1000:.0f}k",
+                  annotation_font=dict(color="#FFD60A", size=11),
+                  annotation_position="bottom right")
+
+    # ── Right: box plots ──────────────────────────────────────
+    for rt in type_order:
+        color  = RIDING_TYPE_COLORS[rt]
+        rt_pops = [p for p, t in zip(pops, types) if t == rt]
+        if not rt_pops:
+            continue
+        fig.add_trace(go.Box(
+            y=rt_pops,
+            name=rt,
+            marker_color=color,
+            line_color=color,
+            fillcolor=hex_rgba(color, 0.2),
+            hovertemplate=f"<b>{rt}</b><br>Population: %{{y}}<extra></extra>",
+            showlegend=False,
+        ), row=1, col=2)
+
+    fig.update_layout(
+        paper_bgcolor=BG_CARD, plot_bgcolor=BG,
+        font=dict(family="Inter, sans-serif", color=TEXT),
+        height=480,
+        barmode="stack",
+        title=dict(text="<b>Riding Population Inequality — How Much Is Your Vote Worth?</b>",
+                   font=dict(size=16, color=TEXT)),
+        legend=dict(bgcolor="rgba(22,27,34,0.9)", bordercolor=GRID, borderwidth=1,
+                    font=dict(color=TEXT)),
+        margin=dict(t=80, b=55, l=65, r=30),
+        hoverlabel=dict(bgcolor="#2D333B", bordercolor=GRID, font=dict(color=TEXT, size=13)),
+    )
+    fig.update_xaxes(gridcolor=GRID, zerolinecolor=GRID, tickfont=dict(color="#CDD9E5"))
+    fig.update_yaxes(gridcolor=GRID, zerolinecolor=GRID, tickfont=dict(color="#CDD9E5"))
+    fig.update_xaxes(title_text="Population", row=1, col=1)
+    fig.update_yaxes(title_text="Number of Ridings", row=1, col=1)
+    fig.update_yaxes(title_text="Population", row=1, col=2)
+    return to_html(fig)
+
+
+def chart_votes_per_seat(results):
+    """Horizontal bar: votes per seat won per party in 2022."""
+    party_votes  = {}  # total votes in won ridings
+    party_seats  = {}  # seats won
+    party_total_votes = {}  # total votes cast for party across all ridings
+
+    for riding, info in results.items():
+        party  = info.get("party", "Others")
+        votes  = info.get("votes", 0)
+        pkey = party if party in PARTY_COLORS else "Others"
+
+        party_seats[pkey]       = party_seats.get(pkey, 0) + 1
+        party_votes[pkey]       = party_votes.get(pkey, 0) + votes
+        party_total_votes[pkey] = party_total_votes.get(pkey, 0) + votes
+
+    # Compute votes per seat
+    total_all_votes = sum(party_total_votes.values())
+    rows = []
+    for p, seats in party_seats.items():
+        if seats == 0:
+            continue
+        vps = party_votes[p] / seats
+        vote_pct = 100.0 * party_total_votes[p] / total_all_votes if total_all_votes else 0
+        rows.append((p, vps, seats, vote_pct))
+
+    rows.sort(key=lambda r: r[1])  # sort ascending by vps
+
+    parties_sorted  = [r[0] for r in rows]
+    vps_sorted      = [r[1] for r in rows]
+    colors_sorted   = [pcolor(p) for p in parties_sorted]
+    annotations_txt = [f"{r[3]:.1f}% of vote, {r[2]} seats" for r in rows]
+
+    fig = go.Figure()
+    fig.add_trace(go.Bar(
+        y=parties_sorted,
+        x=vps_sorted,
+        orientation="h",
+        marker_color=colors_sorted,
+        text=annotations_txt,
+        textposition="outside",
+        textfont=dict(color=TEXT, size=11),
+        hovertemplate="<b>%{y}</b><br>Votes per seat: %{x:,.0f}<extra></extra>",
+        name="Votes per seat",
+    ))
+
+    fig.update_layout(**lay(
+        title="<b>Cost of a Seat — How Many Votes Did It Take? (2022)</b><br>"
+              "<sup>Total valid votes in won ridings ÷ seats won. Lower = more efficient under FPTP.</sup>",
+        height=H,
+        xaxis=dict(title="Votes per Seat Won", tickformat=","),
+        yaxis=dict(title=""),
+        showlegend=False,
+    ))
+    return to_html(fig)
+
+
+def chart_population_seat_bias(results, populations):
+    """Scatter: riding population vs votes cast, coloured by winning party."""
+    fig = go.Figure()
+
+    parties_in_data = sorted(set(
+        info.get("party", "Others") for info in results.values()
+    ))
+
+    all_pops   = []
+    all_votes  = []
+    all_colors = []
+
+    for party in parties_in_data:
+        xs, ys = [], []
+        for riding, info in results.items():
+            if info.get("party", "Others") != party:
+                continue
+            pop   = populations.get(riding)
+            votes = info.get("votes", 0)
+            if pop is None:
+                continue
+            xs.append(pop)
+            ys.append(votes)
+            all_pops.append(pop)
+            all_votes.append(votes)
+            all_colors.append(pcolor(party))
+
+        if not xs:
+            continue
+        fig.add_trace(go.Scatter(
+            x=xs, y=ys,
+            mode="markers",
+            name=party,
+            marker=dict(color=pcolor(party), size=8, opacity=0.75,
+                        line=dict(color=BG_CARD, width=0.5)),
+            hovertemplate=(
+                "<b>%{text}</b><br>"
+                "Population: %{x:,}<br>"
+                "Votes cast: %{y:,}<extra></extra>"
+            ),
+            text=[r for r, info in results.items()
+                  if info.get("party", "Others") == party
+                  and populations.get(r) is not None],
+        ))
+
+    # Linear trend line
+    if len(all_pops) >= 2:
+        n    = len(all_pops)
+        xbar = sum(all_pops) / n
+        ybar = sum(all_votes) / n
+        num  = sum((x - xbar) * (y - ybar) for x, y in zip(all_pops, all_votes))
+        den  = sum((x - xbar) ** 2 for x in all_pops)
+        slope    = num / den if den else 0
+        intercept = ybar - slope * xbar
+        x_min, x_max = min(all_pops), max(all_pops)
+        fig.add_trace(go.Scatter(
+            x=[x_min, x_max],
+            y=[slope * x_min + intercept, slope * x_max + intercept],
+            mode="lines",
+            name="Trend",
+            line=dict(color="#00F5D4", width=2, dash="dash"),
+            hoverinfo="skip",
+        ))
+
+    fig.update_layout(**lay(
+        title="<b>Population vs Votes Cast by Riding — 2022</b><br>"
+              "<sup>Each point = one riding. Colour = winning party.</sup>",
+        height=H,
+        xaxis=dict(title="Riding Population (2016 Census)", tickformat=","),
+        yaxis=dict(title="Total Valid Votes Cast", tickformat=","),
+        legend=dict(**BASE_LAYOUT["legend"]),
+    ))
+    return to_html(fig)
+
+
+CHOROPLETH_COLORSCALE = [
+    [0/4,           "#003F7F"],
+    [1/4 - 0.0001,  "#003F7F"],  # PC - blue
+    [1/4,           "#F4831F"],
+    [2/4 - 0.0001,  "#F4831F"],  # NDP - orange
+    [2/4,           "#D00000"],
+    [3/4 - 0.0001,  "#D00000"],  # Liberal - red
+    [3/4,           "#3D9B35"],
+    [4/4,           "#3D9B35"],  # Green - green (also Others/Ind)
+]
+
+PARTY_Z = {"PC": 0, "NDP": 1, "Liberal": 2, "Green": 3, "Independent": 3, "Others": 3}
+
+
+def chart_map_choropleth(results, geojson):
+    """Choropleth map of 2022 Ontario election results by riding."""
+    locations = []
+    z_vals    = []
+
+    for feature in geojson.get("features", []):
+        name = feature["properties"].get("name", "")
+        info = results.get(name)
+        if info is None:
+            continue
+        party = info.get("party", "Others")
+        z = PARTY_Z.get(party, 3) / 4.0
+        locations.append(name)
+        z_vals.append(z)
+
+    fig = go.Figure()
+    fig.add_trace(go.Choroplethmapbox(
+        geojson=geojson,
+        locations=locations,
+        z=z_vals,
+        featureidkey="properties.name",
+        colorscale=CHOROPLETH_COLORSCALE,
+        zmin=0,
+        zmax=1,
+        showscale=False,
+        marker=dict(opacity=0.85, line=dict(width=0.5, color="#30363D")),
+        hovertemplate=(
+            "<b>%{location}</b><br>"
+            "Winner: %{customdata[0]}<extra></extra>"
+        ),
+        customdata=[[results[loc]["party"]] for loc in locations],
+        name="",
+    ))
+
+    # Manual legend via invisible scatter traces
+    legend_parties = [("PC", "#003F7F"), ("NDP", "#F4831F"),
+                      ("Liberal", "#D00000"), ("Green", "#3D9B35")]
+    for party_name, color in legend_parties:
+        fig.add_trace(go.Scattermapbox(
+            lat=[None], lon=[None],
+            mode="markers",
+            marker=dict(size=12, color=color),
+            name=party_name,
+            showlegend=True,
+        ))
+
+    fig.update_layout(
+        mapbox=dict(
+            style="carto-darkmatter",
+            center=dict(lat=49.5, lon=-84.5),
+            zoom=4.2,
+        ),
+        paper_bgcolor=BG_CARD,
+        font=dict(family="Inter, sans-serif", color=TEXT),
+        height=600,
+        title=dict(
+            text="<b>2022 Ontario Election — FPTP Results by Riding (Geographic Map)</b>",
+            font=dict(size=16, color=TEXT),
+        ),
+        legend=dict(bgcolor="rgba(22,27,34,0.9)", bordercolor=GRID, borderwidth=1,
+                    font=dict(color=TEXT)),
+        margin=dict(t=70, b=10, l=10, r=10),
+    )
+    return to_html(fig)
+
+
+def chart_map_bubble(results, geojson):
+    """Bubble map — 'Land Doesn't Vote, People Do' visualization."""
+    centroids = get_riding_centroids(geojson)
+
+    # Group ridings by party
+    party_data = {}
+    for riding, info in results.items():
+        party = info.get("party", "Others")
+        votes = info.get("votes", 0)
+        centroid = centroids.get(riding)
+        if centroid is None:
+            continue
+        if party not in party_data:
+            party_data[party] = {"lons": [], "lats": [], "sizes": [], "names": [], "votes": []}
+        lon, lat = centroid
+        size = math.sqrt(votes) / 12
+        party_data[party]["lons"].append(lon)
+        party_data[party]["lats"].append(lat)
+        party_data[party]["sizes"].append(size)
+        party_data[party]["names"].append(riding)
+        party_data[party]["votes"].append(votes)
+
+    fig = go.Figure()
+    for party, data in sorted(party_data.items()):
+        color = pcolor(party)
+        fig.add_trace(go.Scattermapbox(
+            lat=data["lats"],
+            lon=data["lons"],
+            mode="markers",
+            name=party,
+            marker=dict(
+                size=data["sizes"],
+                color=color,
+                opacity=0.75,
+                sizemode="diameter",
+            ),
+            text=data["names"],
+            customdata=list(zip(data["votes"], [party] * len(data["votes"]))),
+            hovertemplate=(
+                "<b>%{text}</b><br>"
+                "Party: %{customdata[1]}<br>"
+                "Votes: %{customdata[0]:,}<extra></extra>"
+            ),
+        ))
+
+    fig.update_layout(
+        mapbox=dict(
+            style="carto-darkmatter",
+            center=dict(lat=49.5, lon=-84.5),
+            zoom=4.2,
+        ),
+        paper_bgcolor=BG_CARD,
+        font=dict(family="Inter, sans-serif", color=TEXT),
+        height=600,
+        title=dict(
+            text="<b>2022 Ontario Election — Votes Cast per Riding (Bubble = Votes, Colour = Winner)</b>",
+            font=dict(size=16, color=TEXT),
+        ),
+        legend=dict(bgcolor="rgba(22,27,34,0.9)", bordercolor=GRID, borderwidth=1,
+                    font=dict(color=TEXT)),
+        margin=dict(t=70, b=10, l=10, r=10),
+        annotations=[dict(
+            text="Each bubble's area is proportional to votes cast. Small bubbles in large "
+                 "geographic areas show rural over-representation.",
+            x=0.01, y=0.01, xref="paper", yref="paper",
+            showarrow=False,
+            font=dict(size=11, color=MUTED),
+            bgcolor="rgba(13,17,23,0.7)",
+            bordercolor=BORDER,
+            borderwidth=1,
+            borderpad=6,
+        )],
+    )
+    return to_html(fig)
+
+
+# ════════════════════════════════════════════════════════════════════════════
 # HTML ASSEMBLY
 # ════════════════════════════════════════════════════════════════════════════
+
+PLACEHOLDER_DIV = ("<div style='padding:40px;color:#8B949E;text-align:center;"
+                   "font-size:14px'>Chart unavailable — data files not found.</div>")
+
+
+def _riding_maps_section(riding_charts):
+    """Build the Ontario Riding Maps chapter HTML."""
+    rc = riding_charts or {}
+    choropleth_html = rc.get("map_choropleth", PLACEHOLDER_DIV)
+    bubble_html     = rc.get("map_bubble",     PLACEHOLDER_DIV)
+
+    return f"""
+<section id="riding-maps" class="chapter-section">
+  <div class="chapter-hero">
+    <h2>Ontario Riding Maps &middot; 2022</h2>
+    <p>Two complementary views of the same election result: the geographic view (where land
+    area dominates the picture) and the democratic view (where each bubble represents actual
+    votes cast). Together they reveal a core structural tension in FPTP geography.</p>
+  </div>
+</section>
+
+<section id="riding-maps-choropleth" class="rpt-section">
+  <div class="sec-hdr">
+    <div>
+      <div class="chapter-label">Ontario Riding Maps &middot; 2022</div>
+      <h2 class="sec-title">The Geographic View — land area dominates</h2>
+    </div>
+    <span class="src-badge">Source: Elections Ontario 2022</span>
+  </div>
+  <p class="sec-desc">
+    Each riding is shaded by its winning party. Because many rural and northern ridings cover
+    enormous geographic areas, the PC party (which dominates outside Toronto and Northern Ontario)
+    appears to dominate the map — despite winning only 40.8% of the popular vote.
+  </p>
+  <div class="chart-card" style="height:620px;overflow:hidden">{choropleth_html}</div>
+</section>
+<div class="divider"></div>
+
+<section id="riding-maps-bubble" class="rpt-section">
+  <div class="sec-hdr">
+    <div>
+      <div class="chapter-label">Ontario Riding Maps &middot; 2022</div>
+      <h2 class="sec-title">The Democratic View — each bubble = votes cast</h2>
+    </div>
+    <span class="src-badge">Source: Elections Ontario 2022</span>
+  </div>
+  <blockquote style="background:rgba(0,245,212,0.06);border-left:3px solid #00F5D4;
+    padding:16px 20px;border-radius:0 8px 8px 0;font-size:18px;font-style:italic;
+    color:#E6EDF3;margin:20px 0;">
+    Land Doesn&rsquo;t Vote &mdash; People Do
+  </blockquote>
+  <p class="sec-desc">
+    Bubble size is proportional to total valid votes cast in that riding. Small bubbles
+    sitting inside large geographic areas (Northern and rural Ontario) reveal that those
+    ridings return exactly one MPP despite far fewer voters than dense urban ridings — giving
+    each ballot disproportionate weight.
+  </p>
+  <div class="chart-card" style="height:620px;overflow:hidden">{bubble_html}</div>
+</section>
+<div class="divider"></div>"""
+
+
+def _population_disparity_section(riding_charts):
+    """Build the Riding Population Disparities chapter HTML."""
+    rc = riding_charts or {}
+    pop_disp_html = rc.get("population_disparity", PLACEHOLDER_DIV)
+    vps_html      = rc.get("votes_per_seat",       PLACEHOLDER_DIV)
+    scatter_html  = rc.get("population_seat_bias",  PLACEHOLDER_DIV)
+
+    return f"""
+<section id="population-disparity" class="chapter-section">
+  <div class="chapter-hero">
+    <h2>Riding Population Disparities</h2>
+    <p>Every riding returns exactly one MPP regardless of population size. A riding with
+    60,000 residents has the same legislative representation as one with 180,000. This chapter
+    quantifies how unequal the value of a vote is across Ontario&rsquo;s 124 ridings.</p>
+  </div>
+</section>
+
+{make_section("population-disparity-chart","Population Disparities",
+  "Riding Population Inequality — How Much Is Your Vote Worth?",
+  "Each bar represents ridings grouped by population bracket and classified by type: "
+  "Remote/Northern (&lt;80k), Rural/Small City (80k–110k), Suburban (110k–125k), and "
+  "Urban/High-Growth (&gt;125k). The vertical lines mark the mean and median riding population. "
+  "Because every riding returns one MPP, a voter in a smaller riding has proportionally "
+  "more legislative power.",
+  pop_disp_html,
+  "Elections Ontario · Statistics Canada 2016 Census")}
+<div class="divider"></div>
+
+{make_section("votes-per-seat","Population Disparities",
+  "Cost of a Seat — How Many Votes Did It Take? (2022)",
+  "Total valid votes cast in ridings won by each party, divided by seats won. This &ldquo;cost "
+  "per seat&rdquo; reveals that under FPTP, a vote for the party that wins densely contested "
+  "ridings is far less efficient than a vote for the party that sweeps low-competition ridings. "
+  "Parties winning geographically concentrated or low-turnout ridings pay far fewer votes "
+  "per seat.",
+  vps_html,
+  "Elections Ontario · Statistics Canada 2016 Census")}
+<div class="divider"></div>
+
+{make_section("population-seat-bias","Population Disparities",
+  "Population vs Votes Cast by Riding — 2022",
+  "Each point is one riding. The x-axis is total riding population (2016 Census) and the "
+  "y-axis is total valid votes cast in 2022. The trend line confirms that smaller-population "
+  "ridings generally have fewer votes — yet each still returns one MPP, giving those voters "
+  "disproportionate legislative weight.",
+  scatter_html,
+  "Elections Ontario · Statistics Canada 2016 Census")}
+<div class="divider"></div>"""
+
 
 def make_section(sid, chapter, title, desc, chart_html, source=""):
     badge = (f'<span class="src-badge">Source: {source}</span>' if source else "")
@@ -1062,7 +1623,7 @@ def make_section(sid, chapter, title, desc, chart_html, source=""):
 </section>"""
 
 
-def build_html(charts, stats, false_count, systems_table_html):
+def build_html(charts, stats, false_count, systems_table_html, riding_charts=None):
     today = datetime.now().strftime("%B %d, %Y")
     gen_year = datetime.now().year
 
@@ -1079,6 +1640,7 @@ def build_html(charts, stats, false_count, systems_table_html):
         ("wasted-votes",      "Wasted Votes"),
         ("false-majorities",  "False Majorities"),
         ("election-2022",     "Ch.2 · 2022 Election"),
+        ("riding-maps",       "Ontario Riding Maps"),
         ("map-fptp",          "2022 FPTP Map"),
         ("seat-comparison",   "Seat Comparison"),
         ("systems-table",     "Systems Table"),
@@ -1093,6 +1655,7 @@ def build_html(charts, stats, false_count, systems_table_html):
         ("federal-gallagher", "Federal Gallagher"),
         ("scorecard",         "Ch.6 · Scorecard"),
         ("pr-explainer",      "PR Scorecard"),
+        ("population-disparity", "Population Disparities"),
         ("methodology",       "Ch.7 · Methodology"),
     ]
     nav_html = "\n".join(
@@ -1352,6 +1915,8 @@ body{{background:var(--bg);color:var(--text);font-family:var(--font);
       </div>
     </section>
 
+    {_riding_maps_section(riding_charts)}
+
     {make_section("map-fptp","Chapter 2 · 2022 Election",
       "2022 Ontario Election — Regional Results (FPTP)",
       "Regional vote shares for the 2022 Ontario election. The PC party dominated the 905 Belt "
@@ -1498,6 +2063,8 @@ body{{background:var(--bg);color:var(--text);font-family:var(--font);
       charts["pr_explainer2"],
       "International IDEA · Curated Comparative Scores")}
     <div class="divider"></div>
+
+    {_population_disparity_section(riding_charts)}
 
     <!-- ── CHAPTER 7 ── -->
     <section id="methodology" class="rpt-section">
@@ -1663,6 +2230,10 @@ def main():
         "Riding results": "fetched" if riding_results else "unavailable — using curated data",
     }
 
+    # ── Load local riding data ───────────────────────────────
+    print("\nLoading local riding data…")
+    riding_geojson, riding_election, riding_populations = load_riding_data()
+
     # ── Compute statistics ───────────────────────────────────
     print("\nComputing election statistics…")
     stats = build_election_stats()
@@ -1707,13 +2278,43 @@ def main():
     build("pr_explainer",   "PR Systems Explainer",     chart_pr_systems_explainer)
     build("pr_explainer2",  "PR Systems Explainer (Ch6)", chart_pr_systems_explainer)
 
+    # ── Riding-level charts ───────────────────────────────────
+    riding_charts = {}
+    if riding_geojson and riding_election and riding_populations:
+        print("  Building riding-level charts…")
+        def rbuild(key, label, fn, *args):
+            print(f"    • {label}")
+            try:
+                riding_charts[key] = fn(*args)
+            except Exception as e:
+                print(f"      [warn] {label} failed: {e}")
+                import traceback
+                traceback.print_exc()
+                riding_charts[key] = (
+                    f"<p style='color:#D00000;padding:24px'>Chart unavailable: {e}</p>"
+                )
+
+        rbuild("population_disparity", "Population Disparity",
+               chart_population_disparity, riding_election, riding_populations, riding_geojson)
+        rbuild("votes_per_seat",        "Votes per Seat",
+               chart_votes_per_seat, riding_election)
+        rbuild("population_seat_bias",  "Population vs Votes Scatter",
+               chart_population_seat_bias, riding_election, riding_populations)
+        rbuild("map_choropleth",        "Choropleth Map",
+               chart_map_choropleth, riding_election, riding_geojson)
+        rbuild("map_bubble",            "Bubble Map",
+               chart_map_bubble, riding_election, riding_geojson)
+    else:
+        print("  [skip] Riding-level charts skipped (data files missing)")
+
     # ── Summary table ────────────────────────────────────────
     print("  • Systems table (2022)")
     systems_table_html = chart_systems_table_html(stats)
 
     # ── Assemble HTML ─────────────────────────────────────────
     print("\nAssembling HTML report…")
-    html = build_html(charts, stats, false_count, systems_table_html)
+    html = build_html(charts, stats, false_count, systems_table_html,
+                      riding_charts=riding_charts)
 
     with open(output_path, "w", encoding="utf-8") as f:
         f.write(html)
