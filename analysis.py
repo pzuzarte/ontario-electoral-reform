@@ -2093,6 +2093,8 @@ def build_html(charts, stats, false_count, systems_table_html,
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ontario Electoral Reform Analysis</title>
 <script src="https://cdn.plot.ly/plotly-2.32.0.min.js" charset="utf-8"></script>
+<!-- Anonymous visit counts (no cookies): https://pzuzarte.goatcounter.com -->
+<script data-goatcounter="https://pzuzarte.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
